@@ -8,8 +8,12 @@ import time
 from datetime import datetime
 
 # ── Alpaca credentials ─────────────────────────────────────────────────────
-API_KEY    = "PKQVWLOC4ZTILGLAF6IHODUV42"
-SECRET_KEY = "Nz8TBGf9pp5qcpTQ9C8iG7wiR2xWp7CvYMY8xg9e6Qj"
+from dotenv import load_dotenv
+import os
+load_dotenv(r"C:\Users\ryanc\OneDrive\Desktop\algo-trading-project\.env")
+
+API_KEY    = os.getenv("ALPACA_API_KEY")
+SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
 BASE_URL   = "https://paper-api.alpaca.markets"  # paper trading URL
 
 api = tradeapi.REST(API_KEY, SECRET_KEY, BASE_URL, api_version="v2")
