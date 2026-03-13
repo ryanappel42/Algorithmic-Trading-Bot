@@ -10,7 +10,7 @@ from datetime import datetime
 # ── Alpaca credentials ─────────────────────────────────────────────────────
 from dotenv import load_dotenv
 import os
-load_dotenv(r"C:\Users\ryanc\OneDrive\Desktop\algo-trading-project\.env")
+load_dotenv()
 
 API_KEY    = os.getenv("ALPACA_API_KEY")
 SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
