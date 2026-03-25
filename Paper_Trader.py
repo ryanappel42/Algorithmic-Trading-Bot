@@ -134,6 +134,8 @@ WATCHLIST = [
     "NVDA",   # same sector, slightly more volatile
     "V",      # large cap, very stable
     "JPM",    # large cap financials, stable
+    "ORCL",   # enterprise tech, very stable
+    "COST",   # large cap, extremely predictable
 ]
 
 print("\n── Running Signal Check ───────────────────")
