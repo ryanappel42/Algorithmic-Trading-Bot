@@ -125,7 +125,16 @@ def print_portfolio():
         print(f"  {o.symbol} {o.side.upper()} {o.qty} shares — {o.status} @ {o.created_at}")
 
 # ── Main loop ──────────────────────────────────────────────────────────────
-WATCHLIST = ["AAPL", "NVDA", "MSFT", "TSLA", "GOOGL"]
+WATCHLIST = [
+    "AAPL",   # trained on this - baseline
+    "MSFT",   # most similar to AAPL
+    "GOOGL",  # mega cap tech
+    "AMZN",   # mega cap tech
+    "META",   # large cap tech
+    "NVDA",   # same sector, slightly more volatile
+    "V",      # large cap, very stable
+    "JPM",    # large cap financials, stable
+]
 
 print("\n── Running Signal Check ───────────────────")
 for ticker in WATCHLIST:
