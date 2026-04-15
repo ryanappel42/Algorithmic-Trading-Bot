@@ -8,12 +8,15 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-load_dotenv()
+load_dotenv(r"C:\Users\ryanc\OneDrive\Desktop\algo-trading-project\.env")
 
-# ── Alpaca credentials ─────────────────────────────────────────────────────
+# ── Credentials ────────────────────────────────────────────────────────────
 API_KEY    = os.getenv("ALPACA_API_KEY")
 SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
 BASE_URL   = "https://paper-api.alpaca.markets"
+
+print("API_KEY found:", API_KEY is not None)
+print("SECRET_KEY found:", SECRET_KEY is not None)
 
 api = tradeapi.REST(API_KEY, SECRET_KEY, BASE_URL, api_version="v2")
 
@@ -24,7 +27,7 @@ print(f"Portfolio value: ${float(account.portfolio_value):,.2f}")
 print(f"Buying power   : ${float(account.buying_power):,.2f}")
 print(f"Cash           : ${float(account.cash):,.2f}")
 
-# ── Feature engineering (WITH RETRY) ──────────────────────────────────────
+# ── Feature engineering ────────────────────────────────────────────────────
 def get_features(ticker):
     for attempt in range(3):
         try:
@@ -60,7 +63,7 @@ features = ["rsi","macd","macd_sig","bb_high","bb_low",
 model = joblib.load("models/aapl_xgb_model.joblib")
 print("\nModel loaded successfully")
 
-# ── Get signal (WITH ERROR HANDLING) ──────────────────────────────────────
+# ── Get signal ─────────────────────────────────────────────────────────────
 def get_signal(ticker):
     try:
         df = get_features(ticker)
@@ -90,7 +93,7 @@ def get_signal(ticker):
 def place_trade(ticker, signal, confidence, qty=1):
     try:
         try:
-            position = api.get_position(ticker)
+            api.get_position(ticker)
             has_position = True
         except:
             has_position = False
