@@ -8,8 +8,10 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-load_dotenv(r"C:\Users\ryanc\OneDrive\Desktop\algo-trading-project\.env")
-
+load_dotenv()  # works on Railway via environment variables
+# fallback for local development
+if not os.getenv("ALPACA_API_KEY"):
+    load_dotenv(r"C:\Users\ryanc\OneDrive\Desktop\algo-trading-project\.env")
 # ── Credentials ────────────────────────────────────────────────────────────
 API_KEY    = os.getenv("ALPACA_API_KEY")
 SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
