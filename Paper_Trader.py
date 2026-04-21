@@ -142,8 +142,14 @@ def print_portfolio():
         print(f"  {o.symbol} {o.side.upper()} {o.qty} shares — {o.status} @ {o.created_at}")
 
 # ── Main ───────────────────────────────────────────────────────────────────
-WATCHLIST = ["AAPL", "MSFT", "GOOGL", "AMZN", "META",
-             "NVDA", "V", "JPM", "ORCL", "COST"]
+WATCHLIST = [
+    # Original 10
+    "AAPL", "MSFT", "GOOGL", "AMZN", "META",
+    "NVDA", "V", "JPM", "ORCL", "COST",
+    # New 10
+    "ADBE",  "CRM",  "AMD",  "NFLX", "PYPL",
+    "MA",    "UNH",  "HD",   "BAC",  "QCOM",
+]
 
 print("\n── Running Signal Check ───────────────────")
 for ticker in WATCHLIST:
