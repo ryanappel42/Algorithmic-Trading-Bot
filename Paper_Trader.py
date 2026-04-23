@@ -8,10 +8,12 @@ import time
 from datetime import datetime
 from dotenv import load_dotenv
 import os
-load_dotenv()  # works on Railway via environment variables
-# fallback for local development
+
+# ── Load environment variables ─────────────────────────────────────────────
+load_dotenv()
 if not os.getenv("ALPACA_API_KEY"):
     load_dotenv(r"C:\Users\ryanc\OneDrive\Desktop\algo-trading-project\.env")
+
 # ── Credentials ────────────────────────────────────────────────────────────
 API_KEY    = os.getenv("ALPACA_API_KEY")
 SECRET_KEY = os.getenv("ALPACA_SECRET_KEY")
@@ -95,34 +97,64 @@ def get_signal(ticker):
 def place_trade(ticker, signal, confidence, qty=1):
     try:
         try:
-            api.get_position(ticker)
-            has_position = True
+            position      = api.get_position(ticker)
+            has_position  = True
+            current_qty   = int(float(position.qty))
+            unrealized_pl = float(position.unrealized_pl)
         except:
-            has_position = False
+            has_position  = False
+            current_qty   = 0
+            unrealized_pl = 0
 
-        if signal == "BUY" and not has_position and confidence > 0.60:
-            order = api.submit_order(
-                symbol        = ticker,
-                qty           = qty,
-                side          = "buy",
-                type          = "market",
-                time_in_force = "day"
-            )
-            print(f"  ✓ BUY order placed: {qty} share(s) of {ticker}")
-            return order
+        if signal == "BUY" and confidence > 0.60:
+            if not has_position:
+                # No position yet — buy first share
+                order = api.submit_order(
+                    symbol        = ticker,
+                    qty           = qty,
+                    side          = "buy",
+                    type          = "market",
+                    time_in_force = "day"
+                )
+                print(f"  ✓ BUY order placed: initial position {qty} share(s) of {ticker}")
+                return order
+
+            elif current_qty < 5 and unrealized_pl > 0:
+                # Already profitable and under 5 shares — add more
+                order = api.submit_order(
+                    symbol        = ticker,
+                    qty           = qty,
+                    side          = "buy",
+                    type          = "market",
+                    time_in_force = "day"
+                )
+                print(f"  ✓ BUY order placed: adding to position ({current_qty + qty} shares total) of {ticker}")
+                return order
+
+            elif current_qty >= 5:
+                print(f"  — Max position reached for {ticker} ({current_qty} shares)")
+                return None
+
+            else:
+                print(f"  — No action: position exists but not profitable yet (P&L: ${unrealized_pl:.2f})")
+                return None
+
         elif signal == "SELL" and has_position:
+            # Sell ALL shares at once when signal turns bearish
             order = api.submit_order(
                 symbol        = ticker,
-                qty           = qty,
+                qty           = current_qty,
                 side          = "sell",
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ SELL order placed: {qty} share(s) of {ticker}")
+            print(f"  ✓ SELL order placed: closing full position ({current_qty} shares) of {ticker}")
             return order
+
         else:
             print(f"  — No action: signal={signal}, has_position={has_position}, confidence={confidence:.1%}")
             return None
+
     except Exception as e:
         print(f"  ✗ Order failed: {e}")
         return None
@@ -133,11 +165,16 @@ def print_portfolio():
     positions = api.list_positions()
     if not positions:
         print("  No open positions")
+    total_pnl = 0
     for p in positions:
-        pnl = float(p.unrealized_pl)
-        print(f"  {p.symbol}: {p.qty} shares @ ${float(p.avg_entry_price):.2f} | P&L: ${pnl:+.2f}")
+        pnl      = float(p.unrealized_pl)
+        qty      = int(float(p.qty))
+        value    = float(p.market_value)
+        total_pnl += pnl
+        print(f"  {p.symbol}: {qty} shares | Value: ${value:.2f} | P&L: ${pnl:+.2f}")
+    print(f"\n  Total unrealized P&L: ${total_pnl:+.2f}")
     print("\n── Recent Orders ──────────────────────────")
-    orders = api.list_orders(status="all", limit=5)
+    orders = api.list_orders(status="all", limit=10)
     for o in orders:
         print(f"  {o.symbol} {o.side.upper()} {o.qty} shares — {o.status} @ {o.created_at}")
 
@@ -145,10 +182,10 @@ def print_portfolio():
 WATCHLIST = [
     # Original 10
     "AAPL", "MSFT", "GOOGL", "AMZN", "META",
-    "NVDA", "V", "JPM", "ORCL", "COST",
+    "NVDA", "V",    "JPM",   "ORCL", "COST",
     # New 10
-    "ADBE",  "CRM",  "AMD",  "NFLX", "PYPL",
-    "MA",    "UNH",  "HD",   "BAC",  "QCOM",
+    "ADBE", "CRM",  "AMD",   "NFLX", "PYPL",
+    "MA",   "UNH",  "HD",    "BAC",  "QCOM",
 ]
 
 print("\n── Running Signal Check ───────────────────")
