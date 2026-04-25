@@ -25,9 +25,10 @@ print("SECRET_KEY found:", SECRET_KEY is not None)
 api = tradeapi.REST(API_KEY, SECRET_KEY, BASE_URL, api_version="v2")
 
 # ── Verify connection ──────────────────────────────────────────────────────
-account = api.get_account()
+account         = api.get_account()
+portfolio_value = float(account.portfolio_value)
 print(f"Account status : {account.status}")
-print(f"Portfolio value: ${float(account.portfolio_value):,.2f}")
+print(f"Portfolio value: ${portfolio_value:,.2f}")
 print(f"Buying power   : ${float(account.buying_power):,.2f}")
 print(f"Cash           : ${float(account.cash):,.2f}")
 
@@ -93,9 +94,33 @@ def get_signal(ticker):
         print(f"  ✗ Error getting signal for {ticker}: {e}")
         return None
 
+# ── Position sizing ────────────────────────────────────────────────────────
+def get_position_size(confidence, price, portfolio_value):
+    if confidence >= 0.80:
+        dollars = portfolio_value * 0.05   # 5% of portfolio
+    elif confidence >= 0.70:
+        dollars = portfolio_value * 0.03   # 3% of portfolio
+    elif confidence >= 0.65:
+        dollars = portfolio_value * 0.02   # 2% of portfolio
+    else:
+        dollars = portfolio_value * 0.01   # 1% of portfolio
+    qty = max(1, int(dollars / price))
+    return qty, dollars
+
+# ── Portfolio exposure ─────────────────────────────────────────────────────
+def get_portfolio_exposure():
+    positions      = api.list_positions()
+    total_invested = sum(float(p.market_value) for p in positions)
+    return total_invested
+
 # ── Place trade ────────────────────────────────────────────────────────────
-def place_trade(ticker, signal, confidence, qty=1):
+def place_trade(ticker, signal, confidence, portfolio_value):
     try:
+        # Check total portfolio exposure
+        total_invested = get_portfolio_exposure()
+        exposure_pct   = total_invested / portfolio_value
+        max_exposure   = 0.40  # never invest more than 40% of portfolio
+
         try:
             position      = api.get_position(ticker)
             has_position  = True
@@ -107,40 +132,44 @@ def place_trade(ticker, signal, confidence, qty=1):
             unrealized_pl = 0
 
         if signal == "BUY" and confidence > 0.60:
-            if not has_position:
-                # No position yet — buy first share
-                order = api.submit_order(
-                    symbol        = ticker,
-                    qty           = qty,
-                    side          = "buy",
-                    type          = "market",
-                    time_in_force = "day"
-                )
-                print(f"  ✓ BUY order placed: initial position {qty} share(s) of {ticker}")
-                return order
 
-            elif current_qty < 5 and unrealized_pl > 0:
-                # Already profitable and under 5 shares — add more
-                order = api.submit_order(
-                    symbol        = ticker,
-                    qty           = qty,
-                    side          = "buy",
-                    type          = "market",
-                    time_in_force = "day"
-                )
-                print(f"  ✓ BUY order placed: adding to position ({current_qty + qty} shares total) of {ticker}")
-                return order
-
-            elif current_qty >= 5:
-                print(f"  — Max position reached for {ticker} ({current_qty} shares)")
+            # Check exposure limit before buying
+            if exposure_pct >= max_exposure:
+                print(f"  — Portfolio at {exposure_pct:.1%} exposure (max {max_exposure:.0%}) — skipping {ticker}")
                 return None
 
+            # Get position size based on conviction
+            qty, dollars = get_position_size(confidence, 
+                           get_signal(ticker)["price"] if not has_position else float(api.get_position(ticker).current_price),
+                           portfolio_value)
+
+            if not has_position:
+                order = api.submit_order(
+                    symbol        = ticker,
+                    qty           = qty,
+                    side          = "buy",
+                    type          = "market",
+                    time_in_force = "day"
+                )
+                print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}) — portfolio {exposure_pct:.1%} deployed")
+                return order
+
+            elif unrealized_pl > 0:
+                order = api.submit_order(
+                    symbol        = ticker,
+                    qty           = qty,
+                    side          = "buy",
+                    type          = "market",
+                    time_in_force = "day"
+                )
+                print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}) — portfolio {exposure_pct:.1%} deployed")
+                return order
+
             else:
-                print(f"  — No action: position exists but not profitable yet (P&L: ${unrealized_pl:.2f})")
+                print(f"  — Position exists but not profitable yet (P&L: ${unrealized_pl:.2f})")
                 return None
 
         elif signal == "SELL" and has_position:
-            # Sell ALL shares at once when signal turns bearish
             order = api.submit_order(
                 symbol        = ticker,
                 qty           = current_qty,
@@ -148,7 +177,7 @@ def place_trade(ticker, signal, confidence, qty=1):
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ SELL order placed: closing full position ({current_qty} shares) of {ticker}")
+            print(f"  ✓ SELL closing full position ({current_qty} shares) of {ticker}")
             return order
 
         else:
@@ -165,14 +194,20 @@ def print_portfolio():
     positions = api.list_positions()
     if not positions:
         print("  No open positions")
-    total_pnl = 0
+    total_pnl      = 0
+    total_invested = 0
     for p in positions:
-        pnl      = float(p.unrealized_pl)
-        qty      = int(float(p.qty))
-        value    = float(p.market_value)
-        total_pnl += pnl
-        print(f"  {p.symbol}: {qty} shares | Value: ${value:.2f} | P&L: ${pnl:+.2f}")
-    print(f"\n  Total unrealized P&L: ${total_pnl:+.2f}")
+        pnl            = float(p.unrealized_pl)
+        qty            = int(float(p.qty))
+        value          = float(p.market_value)
+        total_pnl     += pnl
+        total_invested += value
+        print(f"  {p.symbol:<6} {qty} shares | Value: ${value:,.2f} | P&L: ${pnl:+.2f}")
+    exposure = (total_invested / portfolio_value) * 100
+    print(f"\n  Total invested    : ${total_invested:,.2f} ({exposure:.1f}% of portfolio)")
+    print(f"  Total P&L         : ${total_pnl:+.2f}")
+    print(f"  Cash remaining    : ${float(account.cash):,.2f}")
+    print(f"  Max exposure limit: ${portfolio_value * 0.40:,.2f} (40%)")
     print("\n── Recent Orders ──────────────────────────")
     orders = api.list_orders(status="all", limit=10)
     for o in orders:
@@ -198,7 +233,7 @@ for ticker in WATCHLIST:
     print(f"  Signal    : {signal_data['signal']}")
     print(f"  Confidence: {signal_data['confidence']:.1%}")
     print(f"  Price     : ${signal_data['price']:.2f}")
-    place_trade(ticker, signal_data["signal"], signal_data["confidence"], qty=1)
+    place_trade(ticker, signal_data["signal"], signal_data["confidence"], portfolio_value)
 
 print_portfolio()
 print("\nDone. Run this script daily to execute your strategy.")
