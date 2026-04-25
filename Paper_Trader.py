@@ -119,31 +119,33 @@ def place_trade(ticker, signal, confidence, portfolio_value):
         # Check total portfolio exposure
         total_invested = get_portfolio_exposure()
         exposure_pct   = total_invested / portfolio_value
-        max_exposure   = 0.40  # never invest more than 40% of portfolio
+        max_exposure   = 0.40
 
         try:
             position      = api.get_position(ticker)
             has_position  = True
             current_qty   = int(float(position.qty))
             unrealized_pl = float(position.unrealized_pl)
+            current_price = float(position.current_price)
         except:
             has_position  = False
             current_qty   = 0
             unrealized_pl = 0
+            current_price = 0
 
         if signal == "BUY" and confidence > 0.60:
 
             # Check exposure limit before buying
             if exposure_pct >= max_exposure:
-                print(f"  — Portfolio at {exposure_pct:.1%} exposure (max {max_exposure:.0%}) — skipping {ticker}")
+                print(f"  — Portfolio at {exposure_pct:.1%} exposure (max 40%) — skipping {ticker}")
                 return None
 
             # Get position size based on conviction
-            qty, dollars = get_position_size(confidence, 
-                           get_signal(ticker)["price"] if not has_position else float(api.get_position(ticker).current_price),
-                           portfolio_value)
+            price        = current_price if has_position else get_signal(ticker)["price"]
+            qty, dollars = get_position_size(confidence, price, portfolio_value)
 
             if not has_position:
+                # No position yet — open new one
                 order = api.submit_order(
                     symbol        = ticker,
                     qty           = qty,
@@ -154,7 +156,8 @@ def place_trade(ticker, signal, confidence, portfolio_value):
                 print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}) — portfolio {exposure_pct:.1%} deployed")
                 return order
 
-            elif unrealized_pl > 0:
+            elif unrealized_pl > 0 or confidence >= 0.65:
+                # Add to position if profitable OR confidence is 65%+
                 order = api.submit_order(
                     symbol        = ticker,
                     qty           = qty,
@@ -166,7 +169,7 @@ def place_trade(ticker, signal, confidence, portfolio_value):
                 return order
 
             else:
-                print(f"  — Position exists but not profitable yet (P&L: ${unrealized_pl:.2f})")
+                print(f"  — Confidence below 65% and position at loss (P&L: ${unrealized_pl:.2f}) — holding")
                 return None
 
         elif signal == "SELL" and has_position:
