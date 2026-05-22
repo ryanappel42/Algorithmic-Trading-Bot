@@ -3,9 +3,11 @@ yfinance
 pandas
 numpy
 ta
+scikit-learn
 xgboost
+plotly
+streamlit
 joblib
 python-dotenv
 pytz
-scikit-learn
 websockets
