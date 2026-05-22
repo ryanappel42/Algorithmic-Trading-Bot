@@ -645,7 +645,7 @@ elif page == "🔄 Bot Activity":
                 return ""
 
             st.dataframe(
-                orders.style.applymap(color_side, subset=["Side"]),
+                orders.style.map(color_side, subset=["Side"]),
                 use_container_width=True,
                 hide_index=True,
                 height=400
