@@ -53,7 +53,7 @@ st.markdown("""
     .section-title {
         font-size: 18px;
         font-weight: 600;
-        color: #0f172a;
+        color: #ffffff;
         margin: 24px 0 12px 0;
         padding-bottom: 8px;
         border-bottom: 2px solid #e2e8f0;
@@ -482,9 +482,8 @@ elif page == "📈 Stock Analysis":
         plot_bgcolor ="white",
         font         = {"color": "#374151"},
         legend       = {"orientation": "h", "y": 1.08},
-        xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": None},
-        yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9",
-                        "title": "Price (USD)", "tickprefix": "$"},
+        xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Date"},
+        yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Price (USD)", "tickprefix": "$"},
         hovermode    = "x unified",
         margin       = dict(l=60, r=20, t=40, b=40)
     )
@@ -512,8 +511,8 @@ elif page == "📈 Stock Analysis":
             plot_bgcolor ="white",
             font         = {"color": "#374151"},
             showlegend   = False,
-            yaxis        = {"range": [0, 100], "showgrid": True, "gridcolor": "#f1f5f9"},
-            xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9"},
+            xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Date"},
+            yaxis        = {"range": [0, 100], "showgrid": True, "gridcolor": "#f1f5f9", "title": "RSI Value"},
             margin       = dict(l=40, r=20, t=20, b=40)
         )
         st.plotly_chart(fig_rsi, use_container_width=True)
@@ -547,8 +546,8 @@ elif page == "📈 Stock Analysis":
             plot_bgcolor ="white",
             font         = {"color": "#374151"},
             legend       = {"orientation": "h", "y": 1.1},
-            yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9"},
-            xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9"},
+            xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Date"},
+            yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "MACD Value"},
             margin       = dict(l=40, r=20, t=20, b=40)
         )
         st.plotly_chart(fig_macd, use_container_width=True)
@@ -618,7 +617,7 @@ elif page == "🔄 Bot Activity":
                 x="Ticker", y="Count", color="Side",
                 color_discrete_map={"BUY": "#16a34a", "SELL": "#dc2626"},
                 barmode="group",
-                labels={"Count": "Number of Orders", "Ticker": "Stock"}
+                labels={"Count": "Number of Orders", "Ticker": "Stock Symbol", "Side": "Order Type"}
             )
             fig_bar.update_layout(
                 height       = 300,
