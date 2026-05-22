@@ -27,7 +27,7 @@ jobs:
         python-version: '3.12'
 
     - name: Install dependencies
-      run: pip install alpaca-trade-api python-dotenv
+      run: pip install alpaca-trade-api python-dotenv pytz
 
     - name: Update README
       env:

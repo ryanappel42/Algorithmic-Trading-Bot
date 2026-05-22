@@ -31,7 +31,10 @@ orders       = api.list_orders(status="all", limit=50)
 total_trades = len(orders)
 
 # Build the dynamic section
-now          = datetime.now().strftime("%B %d, %Y %I:%M %p EST")
+from datetime import datetime
+import pytz
+est = pytz.timezone("US/Eastern")
+now = datetime.now(est).strftime("%B %d, %Y %I:%M %p EST")
 pnl_emoji    = "📈" if total_pnl >= 0 else "📉"
 status_block = f"""## Live Performance — Auto-updated {now}
 
