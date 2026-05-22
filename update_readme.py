@@ -94,7 +94,7 @@ with open("README.md", "r") as f:
     content = f.read()
 
 start_marker = "## Live Performance"
-end_marker   = "## Results"
+end_marker = "## Backtest Results"
 
 if start_marker in content:
     start_idx   = content.index(start_marker)
