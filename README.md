@@ -9,6 +9,31 @@ Alpaca API.
 
 ---
 
+## Live Performance — Auto-updated May 22, 2026 07:06 PM EST
+
+| Metric | Value |
+|--------|-------|
+| Portfolio Value | $100,848.79 |
+| Total P&L | $+848.79 (+0.85%) |
+| Cash Available | $69,168.19 |
+| Open Positions | 6 |
+| Total Trades Executed | 50 |
+
+📈 Bot has been live since March 27, 2026
+
+### Current Open Positions
+| Ticker | Shares | Value | Unrealized P&L |
+|--------|--------|-------|----------------|
+| BAC | 194 | $10,055.02 | $+157.39 |
+| CRM | 5 | $905.45 | $+65.11 |
+| HD | 35 | $10,920.00 | $+354.52 |
+| JPM | 7 | $2,147.88 | $+50.80 |
+| NFLX | 43 | $3,801.84 | $-24.31 |
+| ORCL | 20 | $3,850.40 | $+18.40 |
+
+
+---
+
 ## Results
 | Metric | Value |
 |--------|-------|
