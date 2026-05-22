@@ -7,6 +7,7 @@ import ta
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
+import pytz
 import os
 from dotenv import load_dotenv
 
@@ -206,7 +207,9 @@ with st.sidebar:
 if page == "📊 Portfolio Overview":
 
     st.title("📊 Portfolio Overview")
-    st.caption(f"Last updated: {datetime.now().strftime('%B %d, %Y %I:%M %p')}")
+    import pytz
+    est = pytz.timezone("US/Eastern")
+    st.caption(f"Last updated: {datetime.now(est).strftime('%B %d, %Y %I:%M %p EST')}")
 
     try:
         account   = get_account()
