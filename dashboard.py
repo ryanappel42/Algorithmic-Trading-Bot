@@ -33,8 +33,8 @@ st.markdown("""
     }
     .metric-label {
         font-size: 13px;
-        color: #64748b;
-        font-weight: 500;
+        color: #000000;
+        font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin-bottom: 6px;
@@ -42,18 +42,19 @@ st.markdown("""
     .metric-value {
         font-size: 26px;
         font-weight: 700;
-        color: #0f172a;
+        color: #000000;
     }
     .metric-sub {
         font-size: 13px;
         margin-top: 4px;
+        color: #000000;
     }
     .positive { color: #16a34a; }
     .negative { color: #dc2626; }
     .section-title {
         font-size: 18px;
-        font-weight: 600;
-        color: #ffffff;
+        font-weight: 700;
+        color: #000000;
         margin: 24px 0 12px 0;
         padding-bottom: 8px;
         border-bottom: 2px solid #e2e8f0;
@@ -74,13 +75,25 @@ st.markdown("""
         font-weight: 600;
         font-size: 13px;
     }
-    .stSelectbox label { color: #374151; font-weight: 500; }
-    div[data-testid="stMetricValue"] { font-size: 24px; }
+    .stSelectbox label { color: #000000; font-weight: 600; }
+    div[data-testid="stMetricValue"] { font-size: 24px; color: #000000; }
+    p { color: #000000; }
+    label { color: #000000 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Timezone ───────────────────────────────────────────────────────────────
 est = pytz.timezone("US/Eastern")
+
+# ── Shared chart font settings ─────────────────────────────────────────────
+CHART_FONT = {"color": "#000000", "size": 12}
+CHART_AXIS = {
+    "showgrid"  : True,
+    "gridcolor" : "#e2e8f0",
+    "color"     : "#000000",
+    "tickfont"  : {"color": "#000000", "size": 11},
+    "titlefont" : {"color": "#000000", "size": 12},
+}
 
 # ── Load credentials ───────────────────────────────────────────────────────
 load_dotenv()
@@ -231,7 +244,7 @@ if page == "📊 Portfolio Overview":
             <div class="metric-card">
                 <div class="metric-label">Portfolio Value</div>
                 <div class="metric-value">${portfolio_value:,.2f}</div>
-                <div class="metric-sub" style="color:#64748b">Started at $100,000</div>
+                <div class="metric-sub">Started at $100,000</div>
             </div>""", unsafe_allow_html=True)
 
         with c2:
@@ -249,7 +262,7 @@ if page == "📊 Portfolio Overview":
             <div class="metric-card">
                 <div class="metric-label">Cash Available</div>
                 <div class="metric-value">${cash:,.2f}</div>
-                <div class="metric-sub" style="color:#64748b">{100 - exposure_pct:.1f}% of portfolio</div>
+                <div class="metric-sub">{100 - exposure_pct:.1f}% of portfolio</div>
             </div>""", unsafe_allow_html=True)
 
         with c4:
@@ -257,7 +270,7 @@ if page == "📊 Portfolio Overview":
             <div class="metric-card">
                 <div class="metric-label">Deployed Capital</div>
                 <div class="metric-value">${total_invested:,.2f}</div>
-                <div class="metric-sub" style="color:#64748b">{exposure_pct:.1f}% of portfolio</div>
+                <div class="metric-sub">{exposure_pct:.1f}% of portfolio</div>
             </div>""", unsafe_allow_html=True)
 
         with c5:
@@ -266,7 +279,7 @@ if page == "📊 Portfolio Overview":
             <div class="metric-card">
                 <div class="metric-label">Open Positions</div>
                 <div class="metric-value">{open_pos}</div>
-                <div class="metric-sub" style="color:#64748b">of 20 watchlist stocks</div>
+                <div class="metric-sub">of 20 watchlist stocks</div>
             </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
@@ -279,11 +292,15 @@ if page == "📊 Portfolio Overview":
             fig_gauge = go.Figure(go.Indicator(
                 mode  = "gauge+number+delta",
                 value = exposure_pct,
-                delta = {"reference": 40, "valueformat": ".1f"},
-                title = {"text": "% Capital Deployed", "font": {"size": 14, "color": "#64748b"}},
-                number= {"suffix": "%", "font": {"size": 28}},
+                delta = {"reference": 40, "valueformat": ".1f",
+                         "font": {"color": "#000000"}},
+                title = {"text": "% Capital Deployed",
+                         "font": {"size": 14, "color": "#000000"}},
+                number= {"suffix": "%", "font": {"size": 28, "color": "#000000"}},
                 gauge = {
-                    "axis"    : {"range": [0, 100], "tickwidth": 1, "tickcolor": "#94a3b8"},
+                    "axis"    : {"range": [0, 100], "tickwidth": 1,
+                                 "tickcolor": "#000000",
+                                 "tickfont": {"color": "#000000"}},
                     "bar"     : {"color": "#3b82f6"},
                     "bgcolor" : "white",
                     "borderwidth": 2,
@@ -294,17 +311,17 @@ if page == "📊 Portfolio Overview":
                         {"range": [70, 100],"color": "#fef2f2"},
                     ],
                     "threshold": {
-                        "line" : {"color": "#dc2626", "width": 3},
+                        "line"     : {"color": "#dc2626", "width": 3},
                         "thickness": 0.75,
-                        "value": 40
+                        "value"    : 40
                     }
                 }
             ))
             fig_gauge.update_layout(
-                height=250,
+                height=260,
                 margin=dict(l=20, r=20, t=40, b=20),
                 paper_bgcolor="white",
-                font={"color": "#374151"}
+                font={"color": "#000000", "size": 12}
             )
             st.plotly_chart(fig_gauge, use_container_width=True)
             st.caption("📊 Shows what percentage of your $100,000 portfolio is currently invested. The red line marks the 40% maximum — the bot will not open new positions beyond this limit, always keeping at least 60% as a cash buffer.")
@@ -340,19 +357,20 @@ if page == "📊 Portfolio Overview":
                 values    = values,
                 hole      = 0.5,
                 textinfo  = "label+percent",
-                textfont  = {"size": 12},
+                textfont  = {"size": 13, "color": "#000000"},
                 marker    = {"line": {"color": "white", "width": 2}}
             ))
             fig_pie.update_layout(
-                height      = 320,
-                showlegend  = True,
-                legend      = {"orientation": "v", "x": 1, "y": 0.5},
-                paper_bgcolor="white",
-                plot_bgcolor ="white",
-                font         = {"color": "#374151"},
+                height       = 340,
+                showlegend   = True,
+                legend       = {"orientation": "v", "x": 1, "y": 0.5,
+                                "font": {"color": "#000000", "size": 12}},
+                paper_bgcolor= "white",
+                plot_bgcolor = "white",
+                font         = {"color": "#000000", "size": 12},
                 annotations  = [{"text": "Portfolio", "x": 0.5, "y": 0.5,
                                  "font_size": 14, "showarrow": False,
-                                 "font_color": "#64748b"}]
+                                 "font_color": "#000000"}]
             )
             st.plotly_chart(fig_pie, use_container_width=True)
             st.caption("🥧 Breakdown of how your capital is allocated across open positions and cash. A larger cash slice means the bot is being selective — only investing when it has high confidence signals.")
@@ -382,9 +400,9 @@ elif page == "📈 Stock Analysis":
     days        = period_days[period]
 
     with st.spinner(f"Loading {ticker} data..."):
-        df              = get_stock_data(ticker)
+        df                 = get_stock_data(ticker)
         signal, confidence = get_ml_signal(df)
-        df_plot         = df.tail(days)
+        df_plot            = df.tail(days)
 
     # ── Signal banner ──────────────────────────────────────────────────────
     price      = df["Close"].iloc[-1]
@@ -407,11 +425,11 @@ elif page == "📈 Stock Analysis":
         <div class="metric-card">
             <div class="metric-label">ML Signal</div>
             <div style="margin-top:8px"><span class="{sig_class}">{signal}</span></div>
-            <div class="metric-sub" style="color:#64748b;margin-top:6px">Confidence: {confidence:.1%}</div>
+            <div class="metric-sub" style="margin-top:6px">Confidence: {confidence:.1%}</div>
         </div>""", unsafe_allow_html=True)
 
     with c3:
-        rsi_color = "#dc2626" if rsi > 70 else "#16a34a" if rsi < 30 else "#374151"
+        rsi_color = "#dc2626" if rsi > 70 else "#16a34a" if rsi < 30 else "#000000"
         rsi_label = "Overbought" if rsi > 70 else "Oversold" if rsi < 30 else "Neutral"
         st.markdown(f"""
         <div class="metric-card">
@@ -435,7 +453,7 @@ elif page == "📈 Stock Analysis":
         <div class="metric-card">
             <div class="metric-label">Daily Volatility</div>
             <div class="metric-value">{volatility:.2f}%</div>
-            <div class="metric-sub" style="color:#64748b">20-day avg</div>
+            <div class="metric-sub">20-day average</div>
         </div>""", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -447,43 +465,42 @@ elif page == "📈 Stock Analysis":
     color  = "#16a34a" if is_up else "#dc2626"
 
     fig_price = go.Figure()
-
     fig_price.add_trace(go.Scatter(
         x=df_plot.index, y=df_plot["bb_high"],
         line=dict(color="#94a3b8", width=1, dash="dot"),
-        name="BB Upper", fill=None
+        name="Bollinger Upper Band", fill=None
     ))
     fig_price.add_trace(go.Scatter(
         x=df_plot.index, y=df_plot["bb_low"],
         line=dict(color="#94a3b8", width=1, dash="dot"),
-        name="BB Lower",
+        name="Bollinger Lower Band",
         fill="tonexty",
         fillcolor="rgba(148,163,184,0.1)"
     ))
     fig_price.add_trace(go.Scatter(
         x=df_plot.index, y=df_plot["ma_20"],
         line=dict(color="#3b82f6", width=1.5),
-        name="MA 20"
+        name="20-Day Moving Average"
     ))
     fig_price.add_trace(go.Scatter(
         x=df_plot.index, y=df_plot["ma_50"],
         line=dict(color="#f59e0b", width=1.5),
-        name="MA 50"
+        name="50-Day Moving Average"
     ))
     fig_price.add_trace(go.Scatter(
         x=df_plot.index, y=df_plot["Close"],
         line=dict(color=color, width=2),
-        name=ticker
+        name=f"{ticker} Close Price"
     ))
-
     fig_price.update_layout(
         height       = 420,
-        paper_bgcolor="white",
-        plot_bgcolor ="white",
-        font         = {"color": "#374151"},
-        legend       = {"orientation": "h", "y": 1.08},
-        xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Date"},
-        yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Price (USD)", "tickprefix": "$"},
+        paper_bgcolor= "white",
+        plot_bgcolor = "white",
+        font         = {"color": "#000000", "size": 12},
+        legend       = {"orientation": "h", "y": 1.08,
+                        "font": {"color": "#000000", "size": 11}},
+        xaxis        = {**CHART_AXIS, "title": "Date"},
+        yaxis        = {**CHART_AXIS, "title": "Price (USD)", "tickprefix": "$"},
         hovermode    = "x unified",
         margin       = dict(l=60, r=20, t=40, b=40)
     )
@@ -494,32 +511,39 @@ elif page == "📈 Stock Analysis":
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown('<div class="section-title">RSI (14)</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">RSI — Relative Strength Index</div>', unsafe_allow_html=True)
         fig_rsi = go.Figure()
         fig_rsi.add_hrect(y0=70, y1=100, fillcolor="#fee2e2", opacity=0.3, line_width=0)
         fig_rsi.add_hrect(y0=0,  y1=30,  fillcolor="#dcfce7", opacity=0.3, line_width=0)
-        fig_rsi.add_hline(y=70, line_dash="dash", line_color="#dc2626", line_width=1)
-        fig_rsi.add_hline(y=30, line_dash="dash", line_color="#16a34a", line_width=1)
+        fig_rsi.add_hline(y=70, line_dash="dash", line_color="#dc2626", line_width=1,
+                          annotation_text="Overbought (70)",
+                          annotation_font_color="#dc2626",
+                          annotation_position="top right")
+        fig_rsi.add_hline(y=30, line_dash="dash", line_color="#16a34a", line_width=1,
+                          annotation_text="Oversold (30)",
+                          annotation_font_color="#16a34a",
+                          annotation_position="bottom right")
         fig_rsi.add_trace(go.Scatter(
             x=df_plot.index, y=df_plot["rsi"],
             line=dict(color="#6366f1", width=2),
-            name="RSI"
+            name="RSI (14-day)"
         ))
         fig_rsi.update_layout(
-            height       = 220,
-            paper_bgcolor="white",
-            plot_bgcolor ="white",
-            font         = {"color": "#374151"},
-            showlegend   = False,
-            xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Date"},
-            yaxis        = {"range": [0, 100], "showgrid": True, "gridcolor": "#f1f5f9", "title": "RSI Value"},
-            margin       = dict(l=40, r=20, t=20, b=40)
+            height       = 260,
+            paper_bgcolor= "white",
+            plot_bgcolor = "white",
+            font         = {"color": "#000000", "size": 12},
+            showlegend   = True,
+            legend       = {"font": {"color": "#000000", "size": 11}},
+            yaxis        = {**CHART_AXIS, "range": [0, 100], "title": "RSI Value"},
+            xaxis        = {**CHART_AXIS, "title": "Date"},
+            margin       = dict(l=50, r=20, t=20, b=40)
         )
         st.plotly_chart(fig_rsi, use_container_width=True)
         st.caption("📉 RSI measures momentum on a 0-100 scale. Above 70 (red zone) means the stock has risen too fast and may pull back — overbought. Below 30 (green zone) means it may have fallen too far and could bounce — oversold. The bot uses RSI as one of its 13 features when generating signals.")
 
     with col2:
-        st.markdown('<div class="section-title">MACD</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-title">MACD — Moving Average Convergence Divergence</div>', unsafe_allow_html=True)
         macd_colors = ["#16a34a" if v >= 0 else "#dc2626"
                        for v in (df_plot["macd"] - df_plot["macd_sig"])]
         fig_macd = go.Figure()
@@ -527,28 +551,29 @@ elif page == "📈 Stock Analysis":
             x=df_plot.index,
             y=df_plot["macd"] - df_plot["macd_sig"],
             marker_color=macd_colors,
-            name="Histogram",
+            name="Histogram (Gap)",
             opacity=0.6
         ))
         fig_macd.add_trace(go.Scatter(
             x=df_plot.index, y=df_plot["macd"],
             line=dict(color="#3b82f6", width=2),
-            name="MACD"
+            name="MACD Line"
         ))
         fig_macd.add_trace(go.Scatter(
             x=df_plot.index, y=df_plot["macd_sig"],
             line=dict(color="#f59e0b", width=2),
-            name="Signal"
+            name="Signal Line"
         ))
         fig_macd.update_layout(
-            height       = 220,
-            paper_bgcolor="white",
-            plot_bgcolor ="white",
-            font         = {"color": "#374151"},
-            legend       = {"orientation": "h", "y": 1.1},
-            xaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "Date"},
-            yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9", "title": "MACD Value"},
-            margin       = dict(l=40, r=20, t=20, b=40)
+            height       = 260,
+            paper_bgcolor= "white",
+            plot_bgcolor = "white",
+            font         = {"color": "#000000", "size": 12},
+            legend       = {"orientation": "h", "y": 1.1,
+                            "font": {"color": "#000000", "size": 11}},
+            yaxis        = {**CHART_AXIS, "title": "MACD Value"},
+            xaxis        = {**CHART_AXIS, "title": "Date"},
+            margin       = dict(l=50, r=20, t=20, b=40)
         )
         st.plotly_chart(fig_macd, use_container_width=True)
         st.caption("📊 MACD shows the relationship between two moving averages of a stock's price. When the blue MACD line crosses above the orange signal line it suggests building upward momentum — bullish. Crossing below suggests weakening momentum — bearish. Green and red bars show the gap between the two lines.")
@@ -617,17 +642,21 @@ elif page == "🔄 Bot Activity":
                 x="Ticker", y="Count", color="Side",
                 color_discrete_map={"BUY": "#16a34a", "SELL": "#dc2626"},
                 barmode="group",
-                labels={"Count": "Number of Orders", "Ticker": "Stock Symbol", "Side": "Order Type"}
+                labels={"Count": "Number of Orders",
+                        "Ticker": "Stock Symbol",
+                        "Side": "Order Type"}
             )
             fig_bar.update_layout(
-                height       = 300,
-                paper_bgcolor="white",
-                plot_bgcolor ="white",
-                font         = {"color": "#374151"},
+                height       = 320,
+                paper_bgcolor= "white",
+                plot_bgcolor = "white",
+                font         = {"color": "#000000", "size": 12},
                 legend_title = "Order Type",
-                xaxis        = {"showgrid": False},
-                yaxis        = {"showgrid": True, "gridcolor": "#f1f5f9"},
-                margin       = dict(l=40, r=20, t=20, b=40)
+                legend       = {"font": {"color": "#000000", "size": 11},
+                                "title_font": {"color": "#000000"}},
+                xaxis        = {**CHART_AXIS, "title": "Stock Symbol"},
+                yaxis        = {**CHART_AXIS, "title": "Number of Orders"},
+                margin       = dict(l=50, r=20, t=20, b=40)
             )
             st.plotly_chart(fig_bar, use_container_width=True)
             st.caption("📊 Total number of buy and sell orders the bot has placed for each stock since launch. Stocks with more activity are ones the model has had stronger or more frequent signals on — showing which stocks the algorithm has the most conviction about.")
