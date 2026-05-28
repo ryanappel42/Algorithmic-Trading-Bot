@@ -75,10 +75,7 @@ def get_signal(ticker):
         if df.empty or len(df) < 50:
             print(f"  ⚠ Not enough data for {ticker}, skipping")
             return None
-        latest = df[features].iloc[-1:]
-        if latest.empty:
-            print(f"  ⚠ No features for {ticker}, skipping")
-            return None
+        latest     = df[features].iloc[-1:]
         pred       = model.predict(latest)[0]
         prob       = model.predict_proba(latest)[0]
         price      = df["Close"].iloc[-1]
@@ -97,13 +94,13 @@ def get_signal(ticker):
 # ── Position sizing ────────────────────────────────────────────────────────
 def get_position_size(confidence, price, portfolio_value):
     if confidence >= 0.80:
-        dollars = portfolio_value * 0.05   # 5% of portfolio
+        dollars = portfolio_value * 0.05
     elif confidence >= 0.70:
-        dollars = portfolio_value * 0.03   # 3% of portfolio
+        dollars = portfolio_value * 0.03
     elif confidence >= 0.65:
-        dollars = portfolio_value * 0.02   # 2% of portfolio
+        dollars = portfolio_value * 0.02
     else:
-        dollars = portfolio_value * 0.01   # 1% of portfolio
+        dollars = portfolio_value * 0.01
     qty = max(1, int(dollars / price))
     return qty, dollars
 
@@ -113,14 +110,37 @@ def get_portfolio_exposure():
     total_invested = sum(float(p.market_value) for p in positions)
     return total_invested
 
-# ── Place trade ────────────────────────────────────────────────────────────
-def place_trade(ticker, signal, confidence, portfolio_value):
+# ── Execute sell ───────────────────────────────────────────────────────────
+def execute_sell(ticker):
     try:
-        # Check total portfolio exposure
+        position      = api.get_position(ticker)
+        current_qty   = int(float(position.qty))
+        unrealized_pl = float(position.unrealized_pl)
+        order = api.submit_order(
+            symbol        = ticker,
+            qty           = current_qty,
+            side          = "sell",
+            type          = "market",
+            time_in_force = "day"
+        )
+        print(f"  ✓ SELL {current_qty} shares of {ticker} | P&L: ${unrealized_pl:+.2f}")
+        return order
+    except Exception as e:
+        print(f"  ✗ Sell failed for {ticker}: {e}")
+        return None
+
+# ── Execute buy ────────────────────────────────────────────────────────────
+def execute_buy(ticker, confidence, price, portfolio_value):
+    try:
         total_invested = get_portfolio_exposure()
         exposure_pct   = total_invested / portfolio_value
         max_exposure   = 0.40
 
+        if exposure_pct >= max_exposure:
+            print(f"  — Portfolio at {exposure_pct:.1%} exposure (max 40%) — skipping {ticker}")
+            return None
+
+        # Check existing position
         try:
             position      = api.get_position(ticker)
             has_position  = True
@@ -131,64 +151,38 @@ def place_trade(ticker, signal, confidence, portfolio_value):
             has_position  = False
             current_qty   = 0
             unrealized_pl = 0
-            current_price = 0
+            current_price = price
 
-        if signal == "BUY" and confidence > 0.60:
+        qty, dollars = get_position_size(confidence, current_price, portfolio_value)
 
-            # Check exposure limit before buying
-            if exposure_pct >= max_exposure:
-                print(f"  — Portfolio at {exposure_pct:.1%} exposure (max 40%) — skipping {ticker}")
-                return None
-
-            # Get position size based on conviction
-            price        = current_price if has_position else get_signal(ticker)["price"]
-            qty, dollars = get_position_size(confidence, price, portfolio_value)
-
-            if not has_position:
-                # No position yet — open new one
-                order = api.submit_order(
-                    symbol        = ticker,
-                    qty           = qty,
-                    side          = "buy",
-                    type          = "market",
-                    time_in_force = "day"
-                )
-                print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}) — portfolio {exposure_pct:.1%} deployed")
-                return order
-
-            elif unrealized_pl > 0 or confidence >= 0.65:
-                # Add to position if profitable OR confidence is 65%+
-                order = api.submit_order(
-                    symbol        = ticker,
-                    qty           = qty,
-                    side          = "buy",
-                    type          = "market",
-                    time_in_force = "day"
-                )
-                print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}) — portfolio {exposure_pct:.1%} deployed")
-                return order
-
-            else:
-                print(f"  — Confidence below 65% and position at loss (P&L: ${unrealized_pl:.2f}) — holding")
-                return None
-
-        elif signal == "SELL" and has_position:
+        if not has_position:
             order = api.submit_order(
                 symbol        = ticker,
-                qty           = current_qty,
-                side          = "sell",
+                qty           = qty,
+                side          = "buy",
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ SELL closing full position ({current_qty} shares) of {ticker}")
+            print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}) | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
+            return order
+
+        elif unrealized_pl > 0 or confidence >= 0.65:
+            order = api.submit_order(
+                symbol        = ticker,
+                qty           = qty,
+                side          = "buy",
+                type          = "market",
+                time_in_force = "day"
+            )
+            print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}) | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
             return order
 
         else:
-            print(f"  — No action: signal={signal}, has_position={has_position}, confidence={confidence:.1%}")
+            print(f"  — Position at loss, confidence below 65% — holding {ticker}")
             return None
 
     except Exception as e:
-        print(f"  ✗ Order failed: {e}")
+        print(f"  ✗ Buy failed for {ticker}: {e}")
         return None
 
 # ── Portfolio summary ──────────────────────────────────────────────────────
@@ -216,17 +210,19 @@ def print_portfolio():
     for o in orders:
         print(f"  {o.symbol} {o.side.upper()} {o.qty} shares — {o.status} @ {o.created_at}")
 
-# ── Main ───────────────────────────────────────────────────────────────────
+# ── Watchlist ──────────────────────────────────────────────────────────────
 WATCHLIST = [
-    # Original 10
     "AAPL", "MSFT", "GOOGL", "AMZN", "META",
     "NVDA", "V",    "JPM",   "ORCL", "COST",
-    # New 10
     "ADBE", "CRM",  "AMD",   "NFLX", "PYPL",
     "MA",   "UNH",  "HD",    "BAC",  "QCOM",
 ]
 
-print("\n── Running Signal Check ───────────────────")
+# ── STEP 1 — Collect all signals ───────────────────────────────────────────
+print("\n── Collecting Signals for All 20 Stocks ───")
+sell_signals = []
+buy_signals  = []
+
 for ticker in WATCHLIST:
     print(f"\nAnalyzing {ticker}...")
     signal_data = get_signal(ticker)
@@ -236,7 +232,53 @@ for ticker in WATCHLIST:
     print(f"  Signal    : {signal_data['signal']}")
     print(f"  Confidence: {signal_data['confidence']:.1%}")
     print(f"  Price     : ${signal_data['price']:.2f}")
-    place_trade(ticker, signal_data["signal"], signal_data["confidence"], portfolio_value)
+
+    if signal_data["signal"] == "SELL":
+        sell_signals.append(signal_data)
+    else:
+        buy_signals.append(signal_data)
+
+# ── STEP 2 — Execute all sells first ──────────────────────────────────────
+print(f"\n── Pass 1: Executing {len(sell_signals)} Sell Signal(s) ───")
+if not sell_signals:
+    print("  No sell signals today")
+else:
+    for s in sell_signals:
+        ticker = s["ticker"]
+        print(f"\n  Processing SELL for {ticker}...")
+        try:
+            api.get_position(ticker)
+            execute_sell(ticker)
+        except:
+            print(f"  — No position in {ticker}, nothing to sell")
+
+# Small pause to let sell orders settle
+if sell_signals:
+    print("\n  Waiting 3 seconds for sell orders to settle...")
+    time.sleep(3)
+
+# ── STEP 3 — Rank buys by confidence, execute highest first ───────────────
+buy_signals_sorted = sorted(buy_signals, key=lambda x: x["confidence"], reverse=True)
+
+print(f"\n── Pass 2: Executing {len(buy_signals_sorted)} Buy Signal(s) — Ranked by Confidence ───")
+if not buy_signals_sorted:
+    print("  No buy signals today")
+else:
+    print("\n  Buy signal rankings:")
+    for i, b in enumerate(buy_signals_sorted, 1):
+        print(f"  #{i} {b['ticker']:<6} Confidence: {b['confidence']:.1%} | Price: ${b['price']:.2f}")
+
+    print("\n  Executing buys...")
+    for b in buy_signals_sorted:
+        # Refresh exposure after each buy
+        total_invested = get_portfolio_exposure()
+        exposure_pct   = total_invested / portfolio_value
+        if exposure_pct >= 0.40:
+            print(f"\n  — Portfolio at {exposure_pct:.1%} exposure — cap reached, stopping buys")
+            print(f"  — Remaining signals skipped: {[x['ticker'] for x in buy_signals_sorted[buy_signals_sorted.index(b):]]}")
+            break
+        print(f"\n  Processing BUY for {b['ticker']}...")
+        execute_buy(b["ticker"], b["confidence"], b["price"], portfolio_value)
 
 print_portfolio()
 print("\nDone. Run this script daily to execute your strategy.")
