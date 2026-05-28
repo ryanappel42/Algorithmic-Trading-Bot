@@ -13,41 +13,33 @@
 
 Every weekday at 9:30 AM EST, this bot wakes up on a cloud server and:
 
-1. Downloads the latest price data for 20 large-cap US stocks
-2. Computes 13 technical indicators for each stock
-3. Runs each stock through a trained machine learning model
-4. Buys stocks the model is confident will rise in the next 5 days
-5. Sells stocks the model thinks will fall
-6. Updates this README automatically with the latest results
+1. Scans all 20 watchlist stocks and collects every signal
+2. Executes all SELL signals first — freeing up capital before any buying
+3. Ranks all BUY signals by model confidence — highest conviction first
+4. Buys down the ranked list until the 40% portfolio cap is hit
+5. Updates this README automatically with the latest results
 
 No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated May 27, 2026 12:52 PM EST
+## Live Performance — Auto-updated placeholder
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $100,697.37 |
-| Total P&L | $+697.37 (+0.70%) |
-| Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $64,370.51 |
-| Open Positions | 7 |
-| Total Trades Executed | 50 |
+| Portfolio Value | $100,000.00 |
+| Total P&L | $0.00 (0.00%) |
+| Daily P&L | 📈 $0.00 (0.00%) |
+| Cash Available | $100,000.00 |
+| Open Positions | 0 |
+| Total Trades Executed | 0 |
 
 📈 Bot has been live since March 27, 2026
 
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| BAC | 232 | $11,833.16 | $-49.91 |
-| CRM | 5 | $897.33 | $+56.98 |
-| HD | 38 | $12,098.63 | $+596.97 |
-| JPM | 10 | $2,972.85 | $-30.37 |
-| NFLX | 43 | $3,765.30 | $-60.86 |
-| ORCL | 20 | $3,793.80 | $-38.20 |
-| PYPL | 22 | $965.80 | $-4.12 |
-
+| — | No open positions | — | — |
 
 ---
 
@@ -161,13 +153,32 @@ def get_position_size(confidence, price, portfolio_value):
 
 ## How a Trade Decision Is Made
 
-Every morning the bot follows this exact decision chain for each stock:
+Every morning the bot runs in three distinct passes:
 
+### Pass 1 — Collect All Signals
+The bot scans all 20 stocks simultaneously and collects every BUY and SELL signal before executing a single trade. This ensures no capital is committed until the full picture is known.
+
+### Pass 2 — Execute All Sells First
+All SELL signals are executed immediately, freeing up capital before any buying begins. This ensures the portfolio always has maximum available capital for the best opportunities of the day.
+
+### Pass 3 — Execute Buys in Confidence Order
+BUY signals are ranked highest to lowest confidence and executed in that order. The highest conviction trade always gets filled first. If the 40% cap is hit mid-list, remaining signals are skipped and logged.
+
+```
+Example morning ranked buy list:
+  #1 NVDA   Confidence: 84.2% → Bought first
+  #2 AAPL   Confidence: 79.1% → Bought second
+  #3 MA     Confidence: 71.3% → Bought third
+  #4 JPM    Confidence: 63.2% → Cap hit, skipped
+  #5 BAC    Confidence: 61.8% → Cap hit, skipped
+```
+
+**The full decision chain for each buy:**
 ```
 Confidence above 60%?
         → No  : Skip — signal too weak
         → Yes : Portfolio below 40% exposure?
-                        → No  : Skip — at capacity
+                        → No  : Stop — cap reached
                         → Yes : Already own this stock?
                                         → No  : Buy immediately
                                         → Yes : Is position profitable?
@@ -176,7 +187,7 @@ Confidence above 60%?
                                                                         → Yes : Dollar cost average
                                                                         → No  : Hold and wait
 
-SELL signal + own the stock → Close entire position immediately
+SELL signal + own the stock → Sell entire position immediately (Pass 2)
 ```
 
 ---
@@ -192,11 +203,13 @@ yfinance → downloads 1 year of price data for all 20 stocks
         ↓
 Feature engineering → computes 13 technical indicators per stock
         ↓
-XGBoost model → generates BUY/SELL signal + confidence score
+XGBoost model → generates BUY/SELL signal + confidence score for all 20 stocks
         ↓
-Risk management → sizes position based on conviction level
+Pass 1 — collect all signals
         ↓
-Alpaca API → executes paper trade
+Pass 2 — execute all SELL signals first
+        ↓
+Pass 3 — rank BUY signals by confidence, execute highest first until 40% cap
         ↓
 9:45 AM EST — GitHub Actions updates this README with latest stats
 ```
