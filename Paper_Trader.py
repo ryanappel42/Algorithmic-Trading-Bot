@@ -5,6 +5,9 @@ import ta
 import xgboost as xgb
 import joblib
 import time
+import warnings
+import contextlib
+import io
 from datetime import datetime
 from dotenv import load_dotenv
 import os
@@ -36,7 +39,15 @@ print(f"Cash           : ${float(account.cash):,.2f}")
 def get_features(ticker):
     for attempt in range(3):
         try:
-            df = yf.download(ticker, period="1y", progress=False)
+            with contextlib.redirect_stdout(io.StringIO()):
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    df = yf.download(
+                        ticker,
+                        period="1y",
+                        progress=False,
+                        auto_adjust=True
+                    )
             if df.empty:
                 raise ValueError("Empty dataframe")
             df.columns = df.columns.get_level_values(0)
@@ -140,7 +151,6 @@ def execute_buy(ticker, confidence, price, portfolio_value):
             print(f"  — Portfolio at {exposure_pct:.1%} exposure (max 40%) — skipping {ticker}")
             return None
 
-        # Check existing position
         try:
             position      = api.get_position(ticker)
             has_position  = True
@@ -254,8 +264,8 @@ else:
 
 # Small pause to let sell orders settle
 if sell_signals:
-    print("\n  Waiting 3 seconds for sell orders to settle...")
-    time.sleep(3)
+    print("\n  Waiting 10 seconds for sell orders to settle...")
+    time.sleep(10)
 
 # ── STEP 3 — Rank buys by confidence, execute highest first ───────────────
 buy_signals_sorted = sorted(buy_signals, key=lambda x: x["confidence"], reverse=True)
@@ -270,12 +280,12 @@ else:
 
     print("\n  Executing buys...")
     for b in buy_signals_sorted:
-        # Refresh exposure after each buy
         total_invested = get_portfolio_exposure()
         exposure_pct   = total_invested / portfolio_value
         if exposure_pct >= 0.40:
+            remaining = [x["ticker"] for x in buy_signals_sorted[buy_signals_sorted.index(b):]]
             print(f"\n  — Portfolio at {exposure_pct:.1%} exposure — cap reached, stopping buys")
-            print(f"  — Remaining signals skipped: {[x['ticker'] for x in buy_signals_sorted[buy_signals_sorted.index(b):]]}")
+            print(f"  — Skipped: {remaining}")
             break
         print(f"\n  Processing BUY for {b['ticker']}...")
         execute_buy(b["ticker"], b["confidence"], b["price"], portfolio_value)
