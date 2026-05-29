@@ -143,6 +143,11 @@ def execute_sell(ticker):
 # ── Execute buy ────────────────────────────────────────────────────────────
 def execute_buy(ticker, confidence, price, portfolio_value):
     try:
+        # ── Confidence gate — hard 60% minimum ────────────────────────────
+        if confidence < 0.60:
+            print(f"  — Confidence too low ({confidence:.1%}) — skipping {ticker}")
+            return None
+
         total_invested = get_portfolio_exposure()
         exposure_pct   = total_invested / portfolio_value
         max_exposure   = 0.40
@@ -245,8 +250,11 @@ for ticker in WATCHLIST:
 
     if signal_data["signal"] == "SELL":
         sell_signals.append(signal_data)
-    else:
+    elif signal_data["confidence"] >= 0.60:
+        # Only add to buy list if above 60% threshold
         buy_signals.append(signal_data)
+    else:
+        print(f"  — Below 60% confidence threshold — not queued for buying")
 
 # ── STEP 2 — Execute all sells first ──────────────────────────────────────
 print(f"\n── Pass 1: Executing {len(sell_signals)} Sell Signal(s) ───")
@@ -272,7 +280,7 @@ buy_signals_sorted = sorted(buy_signals, key=lambda x: x["confidence"], reverse=
 
 print(f"\n── Pass 2: Executing {len(buy_signals_sorted)} Buy Signal(s) — Ranked by Confidence ───")
 if not buy_signals_sorted:
-    print("  No buy signals today")
+    print("  No buy signals above 60% confidence today")
 else:
     print("\n  Buy signal rankings:")
     for i, b in enumerate(buy_signals_sorted, 1):
