@@ -23,23 +23,30 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated placeholder
+## Live Performance — Auto-updated May 28, 2026 01:28 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $100,000.00 |
-| Total P&L | $0.00 (0.00%) |
-| Daily P&L | 📈 $0.00 (0.00%) |
-| Cash Available | $100,000.00 |
-| Open Positions | 0 |
-| Total Trades Executed | 0 |
+| Portfolio Value | $101,031.49 |
+| Total P&L | $+1,031.49 (+1.03%) |
+| Daily P&L | 📈 $+0.00 (+0.00%) |
+| Cash Available | $59,556.17 |
+| Open Positions | 7 |
+| Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
 
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| — | No open positions | — | — |
+| BAC | 232 | $11,791.40 | $-91.67 |
+| CRM | 10 | $1,794.50 | $+88.36 |
+| HD | 41 | $13,114.88 | $+664.98 |
+| JPM | 10 | $2,970.81 | $-32.41 |
+| NFLX | 43 | $3,697.57 | $-128.58 |
+| ORCL | 20 | $4,059.40 | $+227.40 |
+| PYPL | 91 | $4,046.77 | $+76.54 |
+
 
 ---
 
