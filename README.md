@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated May 29, 2026 01:04 PM EST
+## Live Performance — Auto-updated June 01, 2026 03:13 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $101,440.77 |
-| Total P&L | $+1,440.77 (+1.44%) |
+| Portfolio Value | $101,105.89 |
+| Total P&L | $+1,105.89 (+1.11%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $56,807.92 |
-| Open Positions | 12 |
+| Cash Available | $57,874.09 |
+| Open Positions | 11 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,18 +39,17 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 4 | $1,020.04 | $+13.16 |
-| AMZN | 3 | $813.21 | $-0.27 |
-| BAC | 232 | $11,883.04 | $-0.03 |
-| GOOGL | 2 | $764.72 | $-0.98 |
-| HD | 44 | $14,021.48 | $+611.62 |
-| JPM | 10 | $2,976.75 | $-26.47 |
-| MA | 2 | $994.90 | $+0.24 |
-| META | 1 | $625.26 | $+1.25 |
-| NFLX | 43 | $3,697.14 | $-129.01 |
-| PYPL | 136 | $6,084.64 | $+106.11 |
-| UNH | 2 | $760.08 | $+2.82 |
-| V | 3 | $991.54 | $+3.46 |
+| AMZN | 3 | $791.16 | $-22.32 |
+| BAC | 232 | $11,958.44 | $+75.37 |
+| GOOGL | 2 | $755.88 | $-9.82 |
+| HD | 44 | $13,588.96 | $+179.10 |
+| JPM | 10 | $2,962.50 | $-40.72 |
+| MA | 2 | $992.18 | $-2.48 |
+| META | 1 | $606.67 | $-17.35 |
+| NFLX | 43 | $3,696.93 | $-129.23 |
+| PYPL | 136 | $6,156.99 | $+178.46 |
+| UNH | 2 | $758.04 | $+0.78 |
+| V | 3 | $964.05 | $-24.03 |
 
 
 ---
