@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated June 03, 2026 02:12 PM EST
+## Live Performance — Auto-updated June 04, 2026 12:37 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $100,828.90 |
-| Total P&L | $+828.90 (+0.83%) |
+| Portfolio Value | $101,393.27 |
+| Total P&L | $+1,393.27 (+1.39%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $59,965.98 |
+| Cash Available | $59,965.96 |
 | Open Positions | 8 |
 | Total Trades Executed | 50 |
 
@@ -39,14 +39,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| BAC | 232 | $12,168.40 | $+285.33 |
-| HD | 44 | $13,732.84 | $+322.98 |
-| JPM | 10 | $3,017.70 | $+14.48 |
-| MA | 2 | $943.36 | $-51.30 |
-| NFLX | 43 | $3,502.99 | $-323.16 |
-| PYPL | 136 | $5,792.24 | $-186.29 |
-| UNH | 2 | $763.74 | $+6.48 |
-| V | 3 | $941.64 | $-46.44 |
+| BAC | 232 | $12,566.28 | $+683.21 |
+| HD | 44 | $13,659.80 | $+249.94 |
+| JPM | 10 | $3,117.15 | $+113.93 |
+| MA | 2 | $963.42 | $-31.24 |
+| NFLX | 43 | $3,523.85 | $-302.30 |
+| PYPL | 136 | $5,839.16 | $-139.37 |
+| UNH | 2 | $793.57 | $+36.31 |
+| V | 3 | $963.81 | $-24.27 |
 
 
 ---
