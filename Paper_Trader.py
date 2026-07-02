@@ -67,9 +67,8 @@ def get_features(ticker):
             df.dropna(inplace=True)
             return df
         except Exception as e:
-            print(f"  ⚠ Attempt {attempt+1}/3 failed for {ticker}: {e}")
-            time.sleep(5)
-    return pd.DataFrame()
+            return None, f"Attempt {attempt+1}/3 failed: {e}"
+    return None
 
 # ── Load model ─────────────────────────────────────────────────────────────
 features = ["rsi","macd","macd_sig","bb_high","bb_low",
@@ -84,9 +83,8 @@ print("\nModel loaded successfully")
 def get_signal(ticker):
     try:
         df = get_features(ticker)
-        if df.empty or len(df) < 50:
-            print(f"  ⚠ Not enough data for {ticker}, skipping")
-            return None
+        if df is None or (hasattr(df, 'empty') and df.empty) or len(df) < 50:
+            return None, ["  ⚠ Not enough data, skipping"]
         latest     = df[features].iloc[-1:]
         pred       = model.predict(latest)[0]
         prob       = model.predict_proba(latest)[0]
@@ -98,10 +96,9 @@ def get_signal(ticker):
             "confidence": confidence,
             "price"     : price,
             "time"      : datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
+        }, None
     except Exception as e:
-        print(f"  ✗ Error getting signal for {ticker}: {e}")
-        return None
+        return None, [f"  ✗ Error: {e}"]
 
 # ── Position sizing ────────────────────────────────────────────────────────
 def get_position_size(confidence, price, portfolio_value):
@@ -142,7 +139,7 @@ def execute_sell(ticker, reason="SELL signal"):
         return None
 
 # ── Take profit check ──────────────────────────────────────────────────────
-TAKE_PROFIT_PCT = 0.10  # 10% take profit threshold
+TAKE_PROFIT_PCT = 0.10
 
 def check_take_profit(ticker):
     try:
@@ -160,7 +157,6 @@ def check_take_profit(ticker):
 # ── Execute buy ────────────────────────────────────────────────────────────
 def execute_buy(ticker, confidence, price, portfolio_value):
     try:
-        # ── Confidence gate — hard 60% minimum ────────────────────────────
         if confidence < 0.60:
             print(f"  — Confidence too low ({confidence:.1%}) — skipping {ticker}")
             return None
@@ -187,9 +183,8 @@ def execute_buy(ticker, confidence, price, portfolio_value):
             unrealized_plpc = 0
             current_price   = price
 
-        # ── Take profit check before adding to existing position ───────────
         if has_position and unrealized_plpc >= TAKE_PROFIT_PCT:
-            print(f"  💰 Take profit triggered for {ticker} — up {unrealized_plpc:.1%} (${unrealized_pl:+.2f}) — selling instead of adding")
+            print(f"  💰 Take profit triggered for {ticker} — up {unrealized_plpc:.1%} — selling instead of adding")
             execute_sell(ticker, reason=f"Take profit at {unrealized_plpc:.1%}")
             return None
 
@@ -237,9 +232,9 @@ def print_portfolio():
         pnl            = float(p.unrealized_pl)
         qty            = int(float(p.qty))
         value          = float(p.market_value)
+        plpc           = float(p.unrealized_plpc) * 100
         total_pnl     += pnl
         total_invested += value
-        plpc           = float(p.unrealized_plpc) * 100
         tp_flag        = " 💰 NEAR TAKE PROFIT" if plpc >= 8 else ""
         print(f"  {p.symbol:<6} {qty} shares | Value: ${value:,.2f} | P&L: ${pnl:+.2f} ({plpc:+.1f}%){tp_flag}")
     exposure = (total_invested / portfolio_value) * 100
@@ -267,25 +262,28 @@ sell_signals = []
 buy_signals  = []
 
 for ticker in WATCHLIST:
-    print(f"\nAnalyzing {ticker}...")
-    signal_data = get_signal(ticker)
-    if signal_data is None:
-        print(f"  — Skipping {ticker}")
-        continue
-    print(f"  Signal    : {signal_data['signal']}")
-    print(f"  Confidence: {signal_data['confidence']:.1%}")
-    print(f"  Price     : ${signal_data['price']:.2f}")
+    lines       = [f"\nAnalyzing {ticker}..."]
+    result, err = get_signal(ticker)
 
-    if signal_data["signal"] == "SELL":
-        sell_signals.append(signal_data)
-    elif signal_data["confidence"] >= 0.60:
-        buy_signals.append(signal_data)
+    if result is None:
+        lines += err if err else [f"  — Skipping {ticker}"]
     else:
-        print(f"  — Below 60% confidence threshold — not queued for buying")
+        lines.append(f"  Signal    : {result['signal']}")
+        lines.append(f"  Confidence: {result['confidence']:.1%}")
+        lines.append(f"  Price     : ${result['price']:.2f}")
 
-# ── STEP 2 — Check take profits on ALL held positions first ────────────────
+        if result["signal"] == "SELL":
+            sell_signals.append(result)
+        elif result["confidence"] >= 0.60:
+            buy_signals.append(result)
+        else:
+            lines.append(f"  — Below 60% confidence threshold — not queued for buying")
+
+    print("\n".join(lines))
+
+# ── STEP 2 — Take profit check on all held positions ──────────────────────
 print("\n── Take Profit Check ──────────────────────")
-positions = api.list_positions()
+positions    = api.list_positions()
 held_tickers = [p.symbol for p in positions]
 took_profit  = []
 
@@ -293,7 +291,6 @@ for ticker in held_tickers:
     triggered = check_take_profit(ticker)
     if triggered:
         took_profit.append(ticker)
-        # Remove from buy signals if take profit triggered
         buy_signals = [b for b in buy_signals if b["ticker"] != ticker]
 
 if not took_profit:
@@ -316,7 +313,6 @@ else:
         except:
             print(f"  — No position in {ticker}, nothing to sell")
 
-# Small pause to let sell orders settle
 if sell_signals or took_profit:
     print("\n  Waiting 10 seconds for sell orders to settle...")
     time.sleep(10)
