@@ -1,1 +1,15 @@
 portfolio_tracker.json
+venv/
+.env
+__pycache__/
+*.pyc
+models/
+data/
+sp500_cache.json
+portfolio_tracker.json
+node_modules/
+package.json
+package-lock.json
+vite.config.js
+desktop.ini
+.devcontainer/
