@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated July 01, 2026 12:11 PM EST
+## Live Performance — Auto-updated July 02, 2026 11:56 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $105,039.98 |
-| Total P&L | $+5,039.98 (+5.04%) |
+| Portfolio Value | $105,327.69 |
+| Total P&L | $+5,327.69 (+5.33%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $58,467.52 |
+| Cash Available | $61,021.48 |
 | Open Positions | 8 |
 | Total Trades Executed | 50 |
 
@@ -39,14 +39,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 35 | $7,441.00 | $+456.54 |
-| BAC | 267 | $15,582.12 | $+1670.61 |
-| COST | 2 | $1,855.98 | $-62.95 |
-| MA | 2 | $1,058.64 | $+63.98 |
-| NFLX | 70 | $5,139.40 | $-740.29 |
-| ORCL | 6 | $873.66 | $-36.96 |
-| PYPL | 303 | $13,563.80 | $+355.70 |
-| V | 3 | $1,057.86 | $+69.78 |
+| AMD | 1 | $519.83 | $-19.91 |
+| COST | 8 | $7,541.96 | $+53.17 |
+| MA | 3 | $1,602.27 | $+79.84 |
+| META | 10 | $5,873.95 | $-58.91 |
+| NFLX | 70 | $5,381.25 | $-498.44 |
+| ORCL | 48 | $6,744.48 | $-283.65 |
+| PYPL | 349 | $15,766.08 | $+481.39 |
+| QCOM | 5 | $876.10 | $-42.38 |
 
 
 ---
