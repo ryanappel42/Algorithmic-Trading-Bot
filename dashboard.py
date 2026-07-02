@@ -4,6 +4,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import ta
+import xgboost as xgb
 import plotly.graph_objects as go
 import plotly.express as px
 from datetime import datetime, timedelta
@@ -100,7 +101,7 @@ CHART_AXIS = {
     "gridcolor" : "#e2e8f0",
     "color"     : "#000000",
     "tickfont"  : {"color": "#000000", "size": 11},
-    "titlefont" : {"color": "#000000", "size": 12},
+    "title"     : {"font": {"color": "#000000", "size": 12}},
 }
 
 # ── Load credentials ───────────────────────────────────────────────────────
@@ -150,16 +151,7 @@ def get_positions():
         unrealized_pl = float(p.unrealized_pl)
         plpc          = float(p.unrealized_plpc) * 100
         qty           = int(float(p.qty))
-
-        # Days held estimate
-        try:
-            cost_basis = float(p.cost_basis)
-            days_held  = "—"
-        except:
-            days_held = "—"
-
-        near_tp = "💰" if plpc >= 8 else ""
-
+        near_tp       = "💰" if plpc >= 8 else ""
         data.append({
             "Ticker"        : p.symbol,
             "Shares"        : qty,
@@ -189,62 +181,33 @@ def get_orders(limit=200):
         })
     return pd.DataFrame(data)
 
-@st.cache_data(ttl=300)
-def get_activities(limit=200):
-    """Pull account activities to get filled order prices for realized P&L"""
-    try:
-        activities = api.get_activities(activity_types="FILL", page_size=limit)
-        data = []
-        for a in activities:
-            data.append({
-                "time"      : pd.to_datetime(a.transaction_time),
-                "ticker"    : a.symbol,
-                "side"      : a.side,
-                "qty"       : float(a.qty),
-                "price"     : float(a.price),
-                "amount"    : float(a.qty) * float(a.price)
-            })
-        return pd.DataFrame(data)
-    except:
-        return pd.DataFrame()
-
 def classify_sell_reason(orders_df):
-    """
-    Attempts to classify sells as take profit vs regular SELL signal.
-    Take profit sells typically happen alongside a BUY signal on the same day
-    for the same ticker (bot sold then could rebuy).
-    This is a heuristic — not perfect but indicative.
-    """
     if orders_df.empty:
         return 0, 0
-
     sells = orders_df[orders_df["Side"] == "SELL"].copy()
     sells["date"] = pd.to_datetime(sells["Raw Time"]).dt.date
-
-    # Heuristic: if the log contains "Take profit" in the reason we'd know
-    # Since we can't read bot logs from here, we estimate:
-    # Any sell where the ticker also has a buy on the same day = likely take profit
-    buys = orders_df[orders_df["Side"] == "BUY"].copy()
-    buys["date"] = pd.to_datetime(buys["Raw Time"]).dt.date
-
+    buys  = orders_df[orders_df["Side"] == "BUY"].copy()
+    buys["date"]  = pd.to_datetime(buys["Raw Time"]).dt.date
     take_profit_count = 0
     signal_sell_count = 0
-
     for _, sell in sells.iterrows():
         same_day_buy = buys[
             (buys["Ticker"] == sell["Ticker"]) &
-            (buys["date"] == sell["date"])
+            (buys["date"]   == sell["date"])
         ]
         if not same_day_buy.empty:
             take_profit_count += 1
         else:
             signal_sell_count += 1
-
     return take_profit_count, signal_sell_count
 
 @st.cache_data(ttl=3600)
 def get_stock_data(ticker):
-    df = yf.download(ticker, period="1y", progress=False, auto_adjust=True)
+    import warnings, contextlib, io
+    with contextlib.redirect_stdout(io.StringIO()):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            df = yf.download(ticker, period="1y", progress=False, auto_adjust=True)
     df.columns = df.columns.get_level_values(0)
     df["rsi"]         = ta.momentum.RSIIndicator(df["Close"]).rsi()
     df["macd"]        = ta.trend.MACD(df["Close"]).macd()
@@ -264,12 +227,11 @@ def get_stock_data(ticker):
 
 def get_ml_signal(df):
     try:
-        import joblib
         features = ["rsi","macd","macd_sig","bb_high","bb_low",
                     "vol_ma","returns_1d","returns_5d","returns_20d",
                     "volatility","ma_20","ma_50","ma_cross"]
-        model = xgb.XGBClassifier()
-        model.load_model("models/aapl_xgb_model.ubj")        
+        model  = xgb.XGBClassifier()
+        model.load_model("models/aapl_xgb_model.ubj")
         latest = df[features].iloc[-1:]
         pred   = model.predict(latest)[0]
         prob   = model.predict_proba(latest)[0]
@@ -318,8 +280,6 @@ if page == "📊 Portfolio Overview":
         pnl_pct         = (total_pnl / STARTING_VALUE) * 100
         total_invested  = portfolio_value - cash
         exposure_pct    = (total_invested / portfolio_value) * 100
-
-        # Take profit stats
         tp_count, signal_sell_count = classify_sell_reason(orders)
 
         # ── KPI row ────────────────────────────────────────────────────────
@@ -370,11 +330,10 @@ if page == "📊 Portfolio Overview":
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Take profit stats row ──────────────────────────────────────────
+        # ── Exit analysis row ──────────────────────────────────────────────
         st.markdown('<div class="section-title">Exit Analysis</div>', unsafe_allow_html=True)
 
         e1, e2, e3, e4 = st.columns(4)
-
         total_sells = len(orders[orders["Side"] == "SELL"]) if not orders.empty else 0
 
         with e1:
@@ -410,11 +369,10 @@ if page == "📊 Portfolio Overview":
                 <div class="metric-sub">of all exits</div>
             </div>""", unsafe_allow_html=True)
 
-        st.caption("💰 Take profit exits are estimated — positions sold on same day as a rebuy signal are classified as take profit triggers.")
-
+        st.caption("💰 Take profit exits estimated — positions sold same day as rebuy signal classified as take profit.")
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # ── Exposure gauge ─────────────────────────────────────────────────
+        # ── Exposure gauge + positions ─────────────────────────────────────
         col1, col2 = st.columns([1, 2])
 
         with col1:
@@ -454,9 +412,8 @@ if page == "📊 Portfolio Overview":
                 font={"color": "#000000", "size": 12}
             )
             st.plotly_chart(fig_gauge, use_container_width=True)
-            st.caption("📊 Shows what percentage of your $100,000 portfolio is currently invested. The red line marks the 40% maximum — the bot will not open new positions beyond this limit, always keeping at least 60% as a cash buffer.")
+            st.caption("📊 Red line = 40% maximum exposure limit. Bot stops buying when this is reached.")
 
-        # ── Open positions table ───────────────────────────────────────────
         with col2:
             st.markdown('<div class="section-title">Open Positions</div>', unsafe_allow_html=True)
             if positions.empty:
@@ -467,22 +424,22 @@ if page == "📊 Portfolio Overview":
                 display_df["Unrealized P&L"] = display_df["Unrealized P&L"].apply(lambda x: f"${x:+,.2f}")
                 display_df["P&L %"]          = display_df["P&L %"].apply(lambda x: f"{x:+.2f}%")
                 st.dataframe(
-                    display_df[["Ticker","Shares","Avg Entry","Current Price","Market Value","Unrealized P&L","P&L %","Near TP"]],
+                    display_df[["Ticker","Shares","Avg Entry","Current Price",
+                                "Market Value","Unrealized P&L","P&L %","Near TP"]],
                     use_container_width=True,
                     hide_index=True,
                     height=240
                 )
-            st.caption("📋 💰 = position within 2% of 10% take profit threshold. Unrealized P&L is not locked in until the bot sells.")
+            st.caption("📋 💰 = within 2% of 10% take profit threshold.")
 
-        # ── Portfolio composition pie chart ────────────────────────────────
+        # ── Portfolio composition ──────────────────────────────────────────
         st.markdown('<div class="section-title">Portfolio Composition</div>', unsafe_allow_html=True)
 
         if not positions.empty:
             pos_data = get_positions()
             labels   = pos_data["Ticker"].tolist() + ["Cash"]
             values   = pos_data["Market Value"].tolist() + [cash]
-
-            fig_pie = go.Figure(go.Pie(
+            fig_pie  = go.Figure(go.Pie(
                 labels    = labels,
                 values    = values,
                 hole      = 0.5,
@@ -503,13 +460,12 @@ if page == "📊 Portfolio Overview":
                                  "font_color": "#000000"}]
             )
             st.plotly_chart(fig_pie, use_container_width=True)
-            st.caption("🥧 Breakdown of how your capital is allocated across open positions and cash. A larger cash slice means the bot is being selective — only investing when it has high confidence signals.")
+            st.caption("🥧 Breakdown of capital across open positions and cash. Larger cash slice means the bot is being selective.")
         else:
             st.info("No positions open — portfolio is 100% cash.")
 
     except Exception as e:
         st.error(f"Could not connect to Alpaca: {e}")
-        st.info("Check that your API keys are configured correctly.")
 
 # ══════════════════════════════════════════════════════════════════════════
 # PAGE 2 — STOCK ANALYSIS
@@ -518,7 +474,6 @@ elif page == "📈 Stock Analysis":
 
     st.title("📈 Stock Analysis")
     st.caption(f"Last updated: {datetime.now(est).strftime('%B %d, %Y %I:%M %p EST')}")
-    st.caption("Live price data with ML buy/sell signals")
 
     col1, col2 = st.columns([2, 1])
     with col1:
@@ -534,14 +489,12 @@ elif page == "📈 Stock Analysis":
         signal, confidence = get_ml_signal(df)
         df_plot            = df.tail(days)
 
-    # ── Signal banner ──────────────────────────────────────────────────────
     price      = df["Close"].iloc[-1]
     rsi        = df["rsi"].iloc[-1]
     macd_val   = df["macd"].iloc[-1]
     volatility = df["volatility"].iloc[-1] * 100
 
-    # Check if currently held and P&L
-    position_info = ""
+    # Current position info
     try:
         pos           = api.get_position(ticker)
         pos_plpc      = float(pos.unrealized_plpc) * 100
@@ -602,11 +555,11 @@ elif page == "📈 Stock Analysis":
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── Price chart with Bollinger Bands ───────────────────────────────────
+    # ── Price chart ────────────────────────────────────────────────────────
     st.markdown('<div class="section-title">Price Chart with Bollinger Bands</div>', unsafe_allow_html=True)
 
-    is_up  = df_plot["Close"].iloc[-1] >= df_plot["Close"].iloc[0]
-    color  = "#16a34a" if is_up else "#dc2626"
+    is_up = df_plot["Close"].iloc[-1] >= df_plot["Close"].iloc[0]
+    color = "#16a34a" if is_up else "#dc2626"
 
     fig_price = go.Figure()
     fig_price.add_trace(go.Scatter(
@@ -618,8 +571,7 @@ elif page == "📈 Stock Analysis":
         x=df_plot.index, y=df_plot["bb_low"],
         line=dict(color="#94a3b8", width=1, dash="dot"),
         name="Bollinger Lower Band",
-        fill="tonexty",
-        fillcolor="rgba(148,163,184,0.1)"
+        fill="tonexty", fillcolor="rgba(148,163,184,0.1)"
     ))
     fig_price.add_trace(go.Scatter(
         x=df_plot.index, y=df_plot["ma_20"],
@@ -643,15 +595,18 @@ elif page == "📈 Stock Analysis":
         font         = {"color": "#000000", "size": 12},
         legend       = {"orientation": "h", "y": 1.08,
                         "font": {"color": "#000000", "size": 11}},
-        xaxis        = {**CHART_AXIS, "title": "Date"},
-        yaxis        = {**CHART_AXIS, "title": "Price (USD)", "tickprefix": "$"},
+        xaxis        = {**CHART_AXIS, "title": {"text": "Date",
+                        "font": {"color": "#000000", "size": 12}}},
+        yaxis        = {**CHART_AXIS, "title": {"text": "Price (USD)",
+                        "font": {"color": "#000000", "size": 12}},
+                        "tickprefix": "$"},
         hovermode    = "x unified",
         margin       = dict(l=60, r=20, t=40, b=40)
     )
     st.plotly_chart(fig_price, use_container_width=True)
-    st.caption("📈 One year of daily closing prices. The shaded band shows Bollinger Bands — when price touches the upper band the stock may be overbought, lower band may be oversold. Blue line = 20-day moving average, orange = 50-day moving average. When the blue crosses above orange it signals an uptrend.")
+    st.caption("📈 One year of daily closing prices with Bollinger Bands, 20-day and 50-day moving averages.")
 
-    # ── RSI and MACD charts ────────────────────────────────────────────────
+    # ── RSI and MACD ──────────────────────────────────────────────────────
     col1, col2 = st.columns(2)
 
     with col1:
@@ -679,12 +634,15 @@ elif page == "📈 Stock Analysis":
             font         = {"color": "#000000", "size": 12},
             showlegend   = True,
             legend       = {"font": {"color": "#000000", "size": 11}},
-            yaxis        = {**CHART_AXIS, "range": [0, 100], "title": "RSI Value"},
-            xaxis        = {**CHART_AXIS, "title": "Date"},
+            xaxis        = {**CHART_AXIS, "title": {"text": "Date",
+                            "font": {"color": "#000000", "size": 12}}},
+            yaxis        = {**CHART_AXIS, "range": [0, 100],
+                            "title": {"text": "RSI Value",
+                            "font": {"color": "#000000", "size": 12}}},
             margin       = dict(l=50, r=20, t=20, b=40)
         )
         st.plotly_chart(fig_rsi, use_container_width=True)
-        st.caption("📉 RSI measures momentum on a 0-100 scale. Above 70 (red zone) means the stock has risen too fast and may pull back — overbought. Below 30 (green zone) means it may have fallen too far and could bounce — oversold. The bot uses RSI as one of its 13 features when generating signals.")
+        st.caption("📉 Above 70 = overbought, may pull back. Below 30 = oversold, may bounce.")
 
     with col2:
         st.markdown('<div class="section-title">MACD — Moving Average Convergence Divergence</div>', unsafe_allow_html=True)
@@ -695,8 +653,7 @@ elif page == "📈 Stock Analysis":
             x=df_plot.index,
             y=df_plot["macd"] - df_plot["macd_sig"],
             marker_color=macd_colors,
-            name="Histogram (Gap)",
-            opacity=0.6
+            name="Histogram (Gap)", opacity=0.6
         ))
         fig_macd.add_trace(go.Scatter(
             x=df_plot.index, y=df_plot["macd"],
@@ -715,12 +672,14 @@ elif page == "📈 Stock Analysis":
             font         = {"color": "#000000", "size": 12},
             legend       = {"orientation": "h", "y": 1.1,
                             "font": {"color": "#000000", "size": 11}},
-            yaxis        = {**CHART_AXIS, "title": "MACD Value"},
-            xaxis        = {**CHART_AXIS, "title": "Date"},
+            xaxis        = {**CHART_AXIS, "title": {"text": "Date",
+                            "font": {"color": "#000000", "size": 12}}},
+            yaxis        = {**CHART_AXIS, "title": {"text": "MACD Value",
+                            "font": {"color": "#000000", "size": 12}}},
             margin       = dict(l=50, r=20, t=20, b=40)
         )
         st.plotly_chart(fig_macd, use_container_width=True)
-        st.caption("📊 MACD shows the relationship between two moving averages of a stock's price. When the blue MACD line crosses above the orange signal line it suggests building upward momentum — bullish. Crossing below suggests weakening momentum — bearish. Green and red bars show the gap between the two lines.")
+        st.caption("📊 Blue crossing above orange = bullish momentum. Crossing below = bearish.")
 
 # ══════════════════════════════════════════════════════════════════════════
 # PAGE 3 — BOT ACTIVITY
@@ -729,7 +688,6 @@ elif page == "🔄 Bot Activity":
 
     st.title("🔄 Bot Activity")
     st.caption(f"Last updated: {datetime.now(est).strftime('%B %d, %Y %I:%M %p EST')}")
-    st.caption("Complete log of every trade the bot has executed")
 
     try:
         orders = get_orders(limit=200)
@@ -737,7 +695,6 @@ elif page == "🔄 Bot Activity":
         if orders.empty:
             st.info("No trades executed yet.")
         else:
-            # ── Summary stats ──────────────────────────────────────────────
             total_trades = len(orders)
             buys         = len(orders[orders["Side"] == "BUY"])
             sells        = len(orders[orders["Side"] == "SELL"])
@@ -752,28 +709,24 @@ elif page == "🔄 Bot Activity":
                     <div class="metric-label">Total Orders</div>
                     <div class="metric-value">{total_trades}</div>
                 </div>""", unsafe_allow_html=True)
-
             with c2:
                 st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-label">Buy Orders</div>
                     <div class="metric-value positive">{buys}</div>
                 </div>""", unsafe_allow_html=True)
-
             with c3:
                 st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-label">Sell Orders</div>
                     <div class="metric-value negative">{sells}</div>
                 </div>""", unsafe_allow_html=True)
-
             with c4:
                 st.markdown(f"""
                 <div class="metric-card">
                     <div class="metric-label">Fill Rate</div>
                     <div class="metric-value">{(filled/total_trades*100):.0f}%</div>
                 </div>""", unsafe_allow_html=True)
-
             with c5:
                 st.markdown(f"""
                 <div class="metric-card">
@@ -781,7 +734,6 @@ elif page == "🔄 Bot Activity":
                     <div class="metric-value positive">{tp_count}</div>
                     <div class="metric-sub">at 10% threshold</div>
                 </div>""", unsafe_allow_html=True)
-
             with c6:
                 st.markdown(f"""
                 <div class="metric-card">
@@ -792,12 +744,11 @@ elif page == "🔄 Bot Activity":
 
             st.markdown("<br>", unsafe_allow_html=True)
 
-            # ── Trade activity chart ───────────────────────────────────────
+            # ── Trade activity by stock ────────────────────────────────────
             st.markdown('<div class="section-title">Trade Activity by Stock</div>',
                         unsafe_allow_html=True)
 
             ticker_counts = orders.groupby(["Ticker","Side"]).size().reset_index(name="Count")
-
             fig_bar = px.bar(
                 ticker_counts,
                 x="Ticker", y="Count", color="Side",
@@ -813,16 +764,17 @@ elif page == "🔄 Bot Activity":
                 plot_bgcolor = "white",
                 font         = {"color": "#000000", "size": 12},
                 legend_title = "Order Type",
-                legend       = {"font": {"color": "#000000", "size": 11},
-                                "title_font": {"color": "#000000"}},
-                xaxis        = {**CHART_AXIS, "title": "Stock Symbol"},
-                yaxis        = {**CHART_AXIS, "title": "Number of Orders"},
+                legend       = {"font": {"color": "#000000", "size": 11}},
+                xaxis        = {**CHART_AXIS, "title": {"text": "Stock Symbol",
+                                "font": {"color": "#000000", "size": 12}}},
+                yaxis        = {**CHART_AXIS, "title": {"text": "Number of Orders",
+                                "font": {"color": "#000000", "size": 12}}},
                 margin       = dict(l=50, r=20, t=20, b=40)
             )
             st.plotly_chart(fig_bar, use_container_width=True)
-            st.caption("📊 Total number of buy and sell orders the bot has placed for each stock since launch. Stocks with more activity are ones the model has had stronger or more frequent signals on.")
+            st.caption("📊 Stocks with more activity have had stronger or more frequent signals.")
 
-            # ── Daily trade volume chart ───────────────────────────────────
+            # ── Daily trading activity ─────────────────────────────────────
             st.markdown('<div class="section-title">Daily Trading Activity</div>',
                         unsafe_allow_html=True)
 
@@ -843,12 +795,14 @@ elif page == "🔄 Bot Activity":
                 font         = {"color": "#000000", "size": 12},
                 legend_title = "Order Type",
                 legend       = {"font": {"color": "#000000", "size": 11}},
-                xaxis        = {**CHART_AXIS, "title": "Trading Day"},
-                yaxis        = {**CHART_AXIS, "title": "Number of Orders"},
+                xaxis        = {**CHART_AXIS, "title": {"text": "Trading Day",
+                                "font": {"color": "#000000", "size": 12}}},
+                yaxis        = {**CHART_AXIS, "title": {"text": "Number of Orders",
+                                "font": {"color": "#000000", "size": 12}}},
                 margin       = dict(l=50, r=20, t=20, b=40)
             )
             st.plotly_chart(fig_daily, use_container_width=True)
-            st.caption("📅 How many trades the bot executed each day. Busier days typically mean more stocks passed the 60% confidence threshold or take profit rules triggered.")
+            st.caption("📅 Busier days mean more stocks passed the 60% confidence threshold or take profit rules triggered.")
 
             # ── Full trade log ─────────────────────────────────────────────
             st.markdown('<div class="section-title">Full Trade Log</div>',
@@ -868,7 +822,7 @@ elif page == "🔄 Bot Activity":
                 hide_index=True,
                 height=400
             )
-            st.caption("📋 Every order the bot has executed since launch. FILLED means the trade went through successfully at market price. Take profit sells appear as SELL orders and can be identified by same-day rebuys of the same ticker.")
+            st.caption("📋 Every order since launch. FILLED = trade went through at market price.")
 
     except Exception as e:
         st.error(f"Could not load trade data: {e}")
