@@ -76,7 +76,8 @@ features = ["rsi","macd","macd_sig","bb_high","bb_low",
             "vol_ma","returns_1d","returns_5d","returns_20d",
             "volatility","ma_20","ma_50","ma_cross"]
 
-model = joblib.load("models/aapl_xgb_model.joblib")
+model = xgb.XGBClassifier()
+model.load_model("models/aapl_xgb_model.ubj")
 print("\nModel loaded successfully")
 
 # ── Get signal ─────────────────────────────────────────────────────────────
@@ -122,7 +123,7 @@ def get_portfolio_exposure():
     return total_invested
 
 # ── Execute sell ───────────────────────────────────────────────────────────
-def execute_sell(ticker):
+def execute_sell(ticker, reason="SELL signal"):
     try:
         position      = api.get_position(ticker)
         current_qty   = int(float(position.qty))
@@ -134,11 +135,27 @@ def execute_sell(ticker):
             type          = "market",
             time_in_force = "day"
         )
-        print(f"  ✓ SELL {current_qty} shares of {ticker} | P&L: ${unrealized_pl:+.2f}")
+        print(f"  ✓ SELL {current_qty} shares of {ticker} | Reason: {reason} | P&L: ${unrealized_pl:+.2f}")
         return order
     except Exception as e:
         print(f"  ✗ Sell failed for {ticker}: {e}")
         return None
+
+# ── Take profit check ──────────────────────────────────────────────────────
+TAKE_PROFIT_PCT = 0.10  # 10% take profit threshold
+
+def check_take_profit(ticker):
+    try:
+        position        = api.get_position(ticker)
+        unrealized_plpc = float(position.unrealized_plpc)
+        unrealized_pl   = float(position.unrealized_pl)
+        if unrealized_plpc >= TAKE_PROFIT_PCT:
+            print(f"  💰 Take profit triggered for {ticker} — up {unrealized_plpc:.1%} (${unrealized_pl:+.2f})")
+            execute_sell(ticker, reason=f"Take profit at {unrealized_plpc:.1%}")
+            return True
+        return False
+    except:
+        return False
 
 # ── Execute buy ────────────────────────────────────────────────────────────
 def execute_buy(ticker, confidence, price, portfolio_value):
@@ -157,16 +174,24 @@ def execute_buy(ticker, confidence, price, portfolio_value):
             return None
 
         try:
-            position      = api.get_position(ticker)
-            has_position  = True
-            current_qty   = int(float(position.qty))
-            unrealized_pl = float(position.unrealized_pl)
-            current_price = float(position.current_price)
+            position        = api.get_position(ticker)
+            has_position    = True
+            current_qty     = int(float(position.qty))
+            unrealized_pl   = float(position.unrealized_pl)
+            unrealized_plpc = float(position.unrealized_plpc)
+            current_price   = float(position.current_price)
         except:
-            has_position  = False
-            current_qty   = 0
-            unrealized_pl = 0
-            current_price = price
+            has_position    = False
+            current_qty     = 0
+            unrealized_pl   = 0
+            unrealized_plpc = 0
+            current_price   = price
+
+        # ── Take profit check before adding to existing position ───────────
+        if has_position and unrealized_plpc >= TAKE_PROFIT_PCT:
+            print(f"  💰 Take profit triggered for {ticker} — up {unrealized_plpc:.1%} (${unrealized_pl:+.2f}) — selling instead of adding")
+            execute_sell(ticker, reason=f"Take profit at {unrealized_plpc:.1%}")
+            return None
 
         qty, dollars = get_position_size(confidence, current_price, portfolio_value)
 
@@ -214,12 +239,15 @@ def print_portfolio():
         value          = float(p.market_value)
         total_pnl     += pnl
         total_invested += value
-        print(f"  {p.symbol:<6} {qty} shares | Value: ${value:,.2f} | P&L: ${pnl:+.2f}")
+        plpc           = float(p.unrealized_plpc) * 100
+        tp_flag        = " 💰 NEAR TAKE PROFIT" if plpc >= 8 else ""
+        print(f"  {p.symbol:<6} {qty} shares | Value: ${value:,.2f} | P&L: ${pnl:+.2f} ({plpc:+.1f}%){tp_flag}")
     exposure = (total_invested / portfolio_value) * 100
     print(f"\n  Total invested    : ${total_invested:,.2f} ({exposure:.1f}% of portfolio)")
     print(f"  Total P&L         : ${total_pnl:+.2f}")
     print(f"  Cash remaining    : ${float(account.cash):,.2f}")
     print(f"  Max exposure limit: ${portfolio_value * 0.40:,.2f} (40%)")
+    print(f"  Take profit level : {TAKE_PROFIT_PCT:.0%} per position")
     print("\n── Recent Orders ──────────────────────────")
     orders = api.list_orders(status="all", limit=10)
     for o in orders:
@@ -251,18 +279,36 @@ for ticker in WATCHLIST:
     if signal_data["signal"] == "SELL":
         sell_signals.append(signal_data)
     elif signal_data["confidence"] >= 0.60:
-        # Only add to buy list if above 60% threshold
         buy_signals.append(signal_data)
     else:
         print(f"  — Below 60% confidence threshold — not queued for buying")
 
-# ── STEP 2 — Execute all sells first ──────────────────────────────────────
+# ── STEP 2 — Check take profits on ALL held positions first ────────────────
+print("\n── Take Profit Check ──────────────────────")
+positions = api.list_positions()
+held_tickers = [p.symbol for p in positions]
+took_profit  = []
+
+for ticker in held_tickers:
+    triggered = check_take_profit(ticker)
+    if triggered:
+        took_profit.append(ticker)
+        # Remove from buy signals if take profit triggered
+        buy_signals = [b for b in buy_signals if b["ticker"] != ticker]
+
+if not took_profit:
+    print("  No positions at take profit threshold")
+
+# ── STEP 3 — Execute all sells ─────────────────────────────────────────────
 print(f"\n── Pass 1: Executing {len(sell_signals)} Sell Signal(s) ───")
 if not sell_signals:
     print("  No sell signals today")
 else:
     for s in sell_signals:
         ticker = s["ticker"]
+        if ticker in took_profit:
+            print(f"\n  — {ticker} already sold via take profit — skipping")
+            continue
         print(f"\n  Processing SELL for {ticker}...")
         try:
             api.get_position(ticker)
@@ -271,11 +317,11 @@ else:
             print(f"  — No position in {ticker}, nothing to sell")
 
 # Small pause to let sell orders settle
-if sell_signals:
+if sell_signals or took_profit:
     print("\n  Waiting 10 seconds for sell orders to settle...")
     time.sleep(10)
 
-# ── STEP 3 — Rank buys by confidence, execute highest first ───────────────
+# ── STEP 4 — Rank buys by confidence, execute highest first ───────────────
 buy_signals_sorted = sorted(buy_signals, key=lambda x: x["confidence"], reverse=True)
 
 print(f"\n── Pass 2: Executing {len(buy_signals_sorted)} Buy Signal(s) — Ranked by Confidence ───")
