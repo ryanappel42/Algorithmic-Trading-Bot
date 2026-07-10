@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated July 09, 2026 12:17 PM EST
+## Live Performance — Auto-updated July 10, 2026 12:07 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $105,445.01 |
-| Total P&L | $+5,445.01 (+5.45%) |
+| Portfolio Value | $106,082.92 |
+| Total P&L | $+6,082.92 (+6.08%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $61,021.41 |
-| Open Positions | 8 |
+| Cash Available | $67,755.61 |
+| Open Positions | 7 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,14 +39,13 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AMD | 1 | $554.74 | $+15.00 |
-| COST | 8 | $7,290.76 | $-198.03 |
-| MA | 3 | $1,563.03 | $+40.60 |
-| META | 10 | $6,134.40 | $+201.54 |
-| NFLX | 70 | $5,210.11 | $-669.58 |
-| ORCL | 48 | $7,004.64 | $-23.49 |
-| PYPL | 349 | $15,698.02 | $+413.33 |
-| QCOM | 5 | $967.90 | $+49.42 |
+| AMD | 1 | $552.59 | $+12.85 |
+| COST | 8 | $7,304.77 | $-184.02 |
+| MA | 3 | $1,561.74 | $+39.31 |
+| NFLX | 70 | $5,114.55 | $-765.14 |
+| ORCL | 48 | $6,768.00 | $-260.13 |
+| PYPL | 349 | $16,081.92 | $+797.23 |
+| QCOM | 5 | $944.23 | $+25.75 |
 
 
 ---
