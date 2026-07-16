@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated July 15, 2026 11:12 AM EST
+## Live Performance — Auto-updated July 16, 2026 11:21 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $108,794.37 |
-| Total P&L | $+8,794.37 (+8.79%) |
+| Portfolio Value | $108,393.17 |
+| Total P&L | $+8,393.17 (+8.39%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $72,559.44 |
+| Cash Available | $64,625.54 |
 | Open Positions | 6 |
 | Total Trades Executed | 50 |
 
@@ -39,12 +39,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| COST | 13 | $11,963.90 | $-133.46 |
-| MA | 3 | $1,618.39 | $+95.96 |
-| META | 6 | $4,103.04 | $+124.85 |
-| NFLX | 70 | $5,197.15 | $-682.54 |
-| ORCL | 95 | $12,470.65 | $-885.23 |
-| QCOM | 5 | $881.80 | $-36.68 |
+| COST | 16 | $14,948.24 | $+62.38 |
+| MA | 3 | $1,644.12 | $+121.69 |
+| META | 9 | $6,084.05 | $+76.20 |
+| NFLX | 70 | $5,159.35 | $-720.34 |
+| ORCL | 119 | $15,071.94 | $-1399.62 |
+| QCOM | 5 | $859.92 | $-58.55 |
 
 
 ---
