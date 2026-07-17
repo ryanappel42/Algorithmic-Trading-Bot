@@ -8,6 +8,7 @@ import time
 import warnings
 import contextlib
 import io
+import re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
@@ -36,12 +37,14 @@ print(f"Buying power   : ${float(account.buying_power):,.2f}")
 print(f"Cash           : ${float(account.cash):,.2f}")
 
 # ── Risk parameters ─────────────────────────────────────────────────────────
-TAKE_PROFIT_PCT       = 0.10   # exit at +10%
-STOP_LOSS_PCT         = -0.07  # exit at -7%
-HIGH_VOL_THRESHOLD    = 0.025  # 2.5% daily volatility = "high volatility" stock
-HIGH_VOL_MIN_CONF     = 0.65   # high-vol stocks need 65%+ confidence instead of 60%
-HIGH_VOL_SIZE_FACTOR  = 0.6    # high-vol stocks get 60% of normal position size
-EARNINGS_BLACKOUT_DAYS = 3     # no new buys within 3 trading days of earnings
+TAKE_PROFIT_PCT         = 0.10   # exit at +10%
+STOP_LOSS_PCT           = -0.07  # exit at -7%
+HIGH_VOL_THRESHOLD      = 0.025  # 2.5% daily volatility = "high volatility" stock
+HIGH_VOL_MIN_CONF       = 0.65   # high-vol stocks need 65%+ confidence instead of 60%
+HIGH_VOL_SIZE_FACTOR    = 0.6    # high-vol stocks get 60% of normal position size
+EARNINGS_BLACKOUT_DAYS  = 3      # no new buys within 3 trading days of earnings
+NEWS_SENTIMENT_THRESHOLD = -0.3  # block new buys if recent headline sentiment is this negative or worse
+NEWS_HEADLINES_CHECKED  = 8      # how many recent headlines to evaluate
 
 # ── Feature engineering ────────────────────────────────────────────────────
 def get_features(ticker):
@@ -109,6 +112,81 @@ def is_near_earnings(ticker, blackout_days=EARNINGS_BLACKOUT_DAYS):
         # Fail safe: unknown earnings date should not block trading
         return False, None
 
+# ── News sentiment gate ──────────────────────────────────────────────────────
+# NOTE: This is a simple keyword-based scorer, not an NLP model. It is
+# intentionally conservative — it only exists to catch clearly negative
+# headline clusters (e.g. "misses estimates", "investigation", "downgrade")
+# right before a buy. It will miss sarcasm, nuance, and mixed headlines.
+# Treated as a same-day gate, NOT a trained model feature, because free
+# APIs don't provide clean historical headline archives to backtest on.
+
+_POSITIVE_WORDS = [
+    "beat", "beats", "surge", "surges", "record", "strong", "growth",
+    "rally", "gain", "gains", "upgrade", "upgraded", "outperform",
+    "raises", "raised", "expands", "milestone", "breakthrough", "soar",
+    "soars", "jumps", "climb", "climbs", "bullish", "boost", "boosts",
+]
+
+_NEGATIVE_WORDS = [
+    "miss", "misses", "missed", "drop", "drops", "fall", "falls", "falling",
+    "decline", "declines", "concern", "concerns", "risk", "risks", "loss",
+    "losses", "downgrade", "downgraded", "cuts", "cut", "investigation",
+    "recall", "lawsuit", "layoff", "layoffs", "below", "warning", "slow",
+    "slowdown", "plunge", "plunges", "sinks", "slumps", "bearish",
+    "probe", "fraud", "scandal", "resign", "resigns", "fired", "delay",
+    "delayed", "shortfall", "weak", "disappoint", "disappoints",
+    "disappointing", "halt", "halted", "suspend", "suspended",
+]
+
+def _score_headline(title):
+    title_lower = title.lower()
+    words       = re.findall(r"[a-z']+", title_lower)
+    pos_hits    = sum(1 for w in words if w in _POSITIVE_WORDS)
+    neg_hits    = sum(1 for w in words if w in _NEGATIVE_WORDS)
+    if pos_hits == 0 and neg_hits == 0:
+        return 0.0
+    return (pos_hits - neg_hits) / max(pos_hits + neg_hits, 1)
+
+def get_news_sentiment(ticker, n_headlines=NEWS_HEADLINES_CHECKED):
+    """
+    Returns (avg_sentiment, headline_count, sample_negative_headline).
+    avg_sentiment is roughly -1.0 (very negative) to +1.0 (very positive).
+    Fails safe — if news can't be fetched, returns neutral (0.0) so the
+    bot doesn't stall out on an API hiccup.
+    """
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tk    = yf.Ticker(ticker)
+                items = tk.news[:n_headlines] if tk.news else []
+
+        if not items:
+            return 0.0, 0, None
+
+        scores           = []
+        worst_headline   = None
+        worst_score      = 1.0
+
+        for item in items:
+            title = item.get("title") or item.get("content", {}).get("title", "")
+            if not title:
+                continue
+            s = _score_headline(title)
+            scores.append(s)
+            if s < worst_score:
+                worst_score    = s
+                worst_headline = title
+
+        if not scores:
+            return 0.0, 0, None
+
+        avg = sum(scores) / len(scores)
+        return avg, len(scores), (worst_headline if worst_score < 0 else None)
+
+    except Exception:
+        return 0.0, 0, None
+
 # ── Load model ─────────────────────────────────────────────────────────────
 features = ["rsi","macd","macd_sig","bb_high","bb_low",
             "vol_ma","returns_1d","returns_5d","returns_20d",
@@ -141,7 +219,7 @@ def get_signal(ticker):
     except Exception as e:
         return None, [f"  ✗ Error: {e}"]
 
-# ── Position sizing — now volatility-aware ─────────────────────────────────
+# ── Position sizing — volatility-aware ─────────────────────────────────────
 def get_position_size(confidence, price, portfolio_value, volatility):
     if confidence >= 0.80:
         dollars = portfolio_value * 0.05
@@ -152,8 +230,6 @@ def get_position_size(confidence, price, portfolio_value, volatility):
     else:
         dollars = portfolio_value * 0.01
 
-    # Volatility haircut — high-volatility stocks get a smaller dollar bet
-    # per unit of confidence, since tail risk per dollar is higher
     is_high_vol = volatility >= HIGH_VOL_THRESHOLD
     if is_high_vol:
         dollars *= HIGH_VOL_SIZE_FACTOR
@@ -231,6 +307,14 @@ def execute_buy(ticker, confidence, price, portfolio_value, volatility):
             print(f"  📅 Earnings blackout — {ticker} reports around {edate}, skipping new buy")
             return None
 
+        # ── News sentiment gate ──────────────────────────────────────────────
+        sentiment, headline_count, worst = get_news_sentiment(ticker)
+        if headline_count > 0 and sentiment <= NEWS_SENTIMENT_THRESHOLD:
+            print(f"  📰 Negative news sentiment ({sentiment:+.2f} across {headline_count} headlines) — skipping buy")
+            if worst:
+                print(f"     Worst headline: \"{worst}\"")
+            return None
+
         total_invested = get_portfolio_exposure()
         exposure_pct   = total_invested / portfolio_value
         max_exposure   = 0.40
@@ -261,6 +345,7 @@ def execute_buy(ticker, confidence, price, portfolio_value, volatility):
 
         qty, dollars, is_high_vol = get_position_size(confidence, current_price, portfolio_value, volatility)
         vol_tag = " ⚡high-vol" if is_high_vol else ""
+        news_tag = f" 📰{sentiment:+.2f}" if headline_count > 0 else ""
 
         if not has_position:
             order = api.submit_order(
@@ -270,7 +355,7 @@ def execute_buy(ticker, confidence, price, portfolio_value, volatility):
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}){vol_tag} | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
+            print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}){vol_tag}{news_tag} | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
             return order
 
         elif unrealized_pl > 0 or confidence >= 0.65:
@@ -281,7 +366,7 @@ def execute_buy(ticker, confidence, price, portfolio_value, volatility):
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}){vol_tag} | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
+            print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}){vol_tag}{news_tag} | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
             return order
 
         else:
@@ -354,7 +439,6 @@ for ticker in WATCHLIST:
         if result["signal"] == "SELL":
             sell_signals.append(result)
         else:
-            # Volatility-adjusted confidence gate applied at collection too
             min_conf = HIGH_VOL_MIN_CONF if result["volatility"] >= HIGH_VOL_THRESHOLD else 0.60
             if result["confidence"] >= min_conf:
                 buy_signals.append(result)
