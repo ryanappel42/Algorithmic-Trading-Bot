@@ -8,7 +8,7 @@ import time
 import warnings
 import contextlib
 import io
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import os
 
@@ -34,6 +34,14 @@ print(f"Account status : {account.status}")
 print(f"Portfolio value: ${portfolio_value:,.2f}")
 print(f"Buying power   : ${float(account.buying_power):,.2f}")
 print(f"Cash           : ${float(account.cash):,.2f}")
+
+# ── Risk parameters ─────────────────────────────────────────────────────────
+TAKE_PROFIT_PCT       = 0.10   # exit at +10%
+STOP_LOSS_PCT         = -0.07  # exit at -7%
+HIGH_VOL_THRESHOLD    = 0.025  # 2.5% daily volatility = "high volatility" stock
+HIGH_VOL_MIN_CONF     = 0.65   # high-vol stocks need 65%+ confidence instead of 60%
+HIGH_VOL_SIZE_FACTOR  = 0.6    # high-vol stocks get 60% of normal position size
+EARNINGS_BLACKOUT_DAYS = 3     # no new buys within 3 trading days of earnings
 
 # ── Feature engineering ────────────────────────────────────────────────────
 def get_features(ticker):
@@ -67,8 +75,39 @@ def get_features(ticker):
             df.dropna(inplace=True)
             return df
         except Exception as e:
-            return None, f"Attempt {attempt+1}/3 failed: {e}"
+            return None
     return None
+
+# ── Earnings date check ─────────────────────────────────────────────────────
+def is_near_earnings(ticker, blackout_days=EARNINGS_BLACKOUT_DAYS):
+    """
+    Returns True if the ticker has an earnings date within the next
+    `blackout_days` trading days. Fails safe — if the earnings date can't
+    be determined, assumes NOT near earnings so the bot doesn't stall out.
+    """
+    try:
+        with contextlib.redirect_stdout(io.StringIO()):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                tk = yf.Ticker(ticker)
+                edates = tk.get_earnings_dates(limit=4)
+        if edates is None or edates.empty:
+            return False, None
+
+        today = pd.Timestamp.now(tz=edates.index.tz) if edates.index.tz else pd.Timestamp.now()
+        upcoming = edates[edates.index >= today]
+        if upcoming.empty:
+            return False, None
+
+        next_earnings = upcoming.index.min()
+        days_until     = (next_earnings.tz_localize(None) - pd.Timestamp.now()).days
+
+        if 0 <= days_until <= blackout_days:
+            return True, next_earnings.strftime("%Y-%m-%d")
+        return False, next_earnings.strftime("%Y-%m-%d")
+    except Exception:
+        # Fail safe: unknown earnings date should not block trading
+        return False, None
 
 # ── Load model ─────────────────────────────────────────────────────────────
 features = ["rsi","macd","macd_sig","bb_high","bb_low",
@@ -83,25 +122,27 @@ print("\nModel loaded successfully")
 def get_signal(ticker):
     try:
         df = get_features(ticker)
-        if df is None or (hasattr(df, 'empty') and df.empty) or len(df) < 50:
+        if df is None or df.empty or len(df) < 50:
             return None, ["  ⚠ Not enough data, skipping"]
-        latest     = df[features].iloc[-1:]
-        pred       = model.predict(latest)[0]
-        prob       = model.predict_proba(latest)[0]
-        price      = df["Close"].iloc[-1]
-        confidence = prob[1] if pred == 1 else prob[0]
+        latest      = df[features].iloc[-1:]
+        pred        = model.predict(latest)[0]
+        prob        = model.predict_proba(latest)[0]
+        price       = df["Close"].iloc[-1]
+        confidence  = prob[1] if pred == 1 else prob[0]
+        volatility  = df["volatility"].iloc[-1]
         return {
-            "ticker"    : ticker,
-            "signal"    : "BUY" if pred == 1 else "SELL",
-            "confidence": confidence,
-            "price"     : price,
-            "time"      : datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "ticker"     : ticker,
+            "signal"     : "BUY" if pred == 1 else "SELL",
+            "confidence" : confidence,
+            "price"      : price,
+            "volatility" : volatility,
+            "time"       : datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         }, None
     except Exception as e:
         return None, [f"  ✗ Error: {e}"]
 
-# ── Position sizing ────────────────────────────────────────────────────────
-def get_position_size(confidence, price, portfolio_value):
+# ── Position sizing — now volatility-aware ─────────────────────────────────
+def get_position_size(confidence, price, portfolio_value, volatility):
     if confidence >= 0.80:
         dollars = portfolio_value * 0.05
     elif confidence >= 0.70:
@@ -110,8 +151,15 @@ def get_position_size(confidence, price, portfolio_value):
         dollars = portfolio_value * 0.02
     else:
         dollars = portfolio_value * 0.01
+
+    # Volatility haircut — high-volatility stocks get a smaller dollar bet
+    # per unit of confidence, since tail risk per dollar is higher
+    is_high_vol = volatility >= HIGH_VOL_THRESHOLD
+    if is_high_vol:
+        dollars *= HIGH_VOL_SIZE_FACTOR
+
     qty = max(1, int(dollars / price))
-    return qty, dollars
+    return qty, dollars, is_high_vol
 
 # ── Portfolio exposure ─────────────────────────────────────────────────────
 def get_portfolio_exposure():
@@ -138,9 +186,7 @@ def execute_sell(ticker, reason="SELL signal"):
         print(f"  ✗ Sell failed for {ticker}: {e}")
         return None
 
-# ── Take profit check ──────────────────────────────────────────────────────
-TAKE_PROFIT_PCT = 0.10
-
+# ── Take profit / stop loss checks ──────────────────────────────────────────
 def check_take_profit(ticker):
     try:
         position        = api.get_position(ticker)
@@ -154,11 +200,35 @@ def check_take_profit(ticker):
     except:
         return False
 
-# ── Execute buy ────────────────────────────────────────────────────────────
-def execute_buy(ticker, confidence, price, portfolio_value):
+def check_stop_loss(ticker):
     try:
-        if confidence < 0.60:
-            print(f"  — Confidence too low ({confidence:.1%}) — skipping {ticker}")
+        position        = api.get_position(ticker)
+        unrealized_plpc = float(position.unrealized_plpc)
+        unrealized_pl   = float(position.unrealized_pl)
+        if unrealized_plpc <= STOP_LOSS_PCT:
+            print(f"  🛑 Stop loss triggered for {ticker} — down {unrealized_plpc:.1%} (${unrealized_pl:+.2f})")
+            execute_sell(ticker, reason=f"Stop loss at {unrealized_plpc:.1%}")
+            return True
+        return False
+    except:
+        return False
+
+# ── Execute buy ────────────────────────────────────────────────────────────
+def execute_buy(ticker, confidence, price, portfolio_value, volatility):
+    try:
+        # ── Volatility-adjusted confidence gate ────────────────────────────
+        is_high_vol  = volatility >= HIGH_VOL_THRESHOLD
+        min_conf     = HIGH_VOL_MIN_CONF if is_high_vol else 0.60
+
+        if confidence < min_conf:
+            tag = "high-vol " if is_high_vol else ""
+            print(f"  — Confidence {confidence:.1%} below {tag}threshold {min_conf:.0%} — skipping {ticker}")
+            return None
+
+        # ── Earnings blackout check ─────────────────────────────────────────
+        near_earnings, edate = is_near_earnings(ticker)
+        if near_earnings:
+            print(f"  📅 Earnings blackout — {ticker} reports around {edate}, skipping new buy")
             return None
 
         total_invested = get_portfolio_exposure()
@@ -183,12 +253,14 @@ def execute_buy(ticker, confidence, price, portfolio_value):
             unrealized_plpc = 0
             current_price   = price
 
+        # Take profit check before adding
         if has_position and unrealized_plpc >= TAKE_PROFIT_PCT:
             print(f"  💰 Take profit triggered for {ticker} — up {unrealized_plpc:.1%} — selling instead of adding")
             execute_sell(ticker, reason=f"Take profit at {unrealized_plpc:.1%}")
             return None
 
-        qty, dollars = get_position_size(confidence, current_price, portfolio_value)
+        qty, dollars, is_high_vol = get_position_size(confidence, current_price, portfolio_value, volatility)
+        vol_tag = " ⚡high-vol" if is_high_vol else ""
 
         if not has_position:
             order = api.submit_order(
@@ -198,7 +270,7 @@ def execute_buy(ticker, confidence, price, portfolio_value):
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}) | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
+            print(f"  ✓ BUY {qty} share(s) of {ticker} (~${dollars:,.0f}){vol_tag} | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
             return order
 
         elif unrealized_pl > 0 or confidence >= 0.65:
@@ -209,7 +281,7 @@ def execute_buy(ticker, confidence, price, portfolio_value):
                 type          = "market",
                 time_in_force = "day"
             )
-            print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}) | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
+            print(f"  ✓ Adding {qty} share(s) to {ticker} (~${dollars:,.0f}){vol_tag} | Confidence: {confidence:.1%} | Exposure: {exposure_pct:.1%}")
             return order
 
         else:
@@ -235,14 +307,19 @@ def print_portfolio():
         plpc           = float(p.unrealized_plpc) * 100
         total_pnl     += pnl
         total_invested += value
-        tp_flag        = " 💰 NEAR TAKE PROFIT" if plpc >= 8 else ""
-        print(f"  {p.symbol:<6} {qty} shares | Value: ${value:,.2f} | P&L: ${pnl:+.2f} ({plpc:+.1f}%){tp_flag}")
+        flag = ""
+        if plpc >= 8:
+            flag = " 💰 NEAR TAKE PROFIT"
+        elif plpc <= -5:
+            flag = " 🛑 NEAR STOP LOSS"
+        print(f"  {p.symbol:<6} {qty} shares | Value: ${value:,.2f} | P&L: ${pnl:+.2f} ({plpc:+.1f}%){flag}")
     exposure = (total_invested / portfolio_value) * 100
     print(f"\n  Total invested    : ${total_invested:,.2f} ({exposure:.1f}% of portfolio)")
     print(f"  Total P&L         : ${total_pnl:+.2f}")
     print(f"  Cash remaining    : ${float(account.cash):,.2f}")
     print(f"  Max exposure limit: ${portfolio_value * 0.40:,.2f} (40%)")
     print(f"  Take profit level : {TAKE_PROFIT_PCT:.0%} per position")
+    print(f"  Stop loss level   : {STOP_LOSS_PCT:.0%} per position")
     print("\n── Recent Orders ──────────────────────────")
     orders = api.list_orders(status="all", limit=10)
     for o in orders:
@@ -268,33 +345,41 @@ for ticker in WATCHLIST:
     if result is None:
         lines += err if err else [f"  — Skipping {ticker}"]
     else:
-        lines.append(f"  Signal    : {result['signal']}")
+        vol_tag = " ⚡high-vol" if result["volatility"] >= HIGH_VOL_THRESHOLD else ""
+        lines.append(f"  Signal    : {result['signal']}{vol_tag}")
         lines.append(f"  Confidence: {result['confidence']:.1%}")
         lines.append(f"  Price     : ${result['price']:.2f}")
+        lines.append(f"  Volatility: {result['volatility']:.3f}")
 
         if result["signal"] == "SELL":
             sell_signals.append(result)
-        elif result["confidence"] >= 0.60:
-            buy_signals.append(result)
         else:
-            lines.append(f"  — Below 60% confidence threshold — not queued for buying")
+            # Volatility-adjusted confidence gate applied at collection too
+            min_conf = HIGH_VOL_MIN_CONF if result["volatility"] >= HIGH_VOL_THRESHOLD else 0.60
+            if result["confidence"] >= min_conf:
+                buy_signals.append(result)
+            else:
+                lines.append(f"  — Below {min_conf:.0%} confidence threshold — not queued for buying")
 
     print("\n".join(lines))
 
-# ── STEP 2 — Take profit check on all held positions ──────────────────────
-print("\n── Take Profit Check ──────────────────────")
+# ── STEP 2 — Take profit / stop loss check on all held positions ──────────
+print("\n── Take Profit / Stop Loss Check ──────────")
 positions    = api.list_positions()
 held_tickers = [p.symbol for p in positions]
-took_profit  = []
+exited       = []
 
 for ticker in held_tickers:
-    triggered = check_take_profit(ticker)
-    if triggered:
-        took_profit.append(ticker)
-        buy_signals = [b for b in buy_signals if b["ticker"] != ticker]
+    if check_take_profit(ticker):
+        exited.append(ticker)
+        continue
+    if check_stop_loss(ticker):
+        exited.append(ticker)
 
-if not took_profit:
-    print("  No positions at take profit threshold")
+if not exited:
+    print("  No positions at take profit or stop loss threshold")
+
+buy_signals = [b for b in buy_signals if b["ticker"] not in exited]
 
 # ── STEP 3 — Execute all sells ─────────────────────────────────────────────
 print(f"\n── Pass 1: Executing {len(sell_signals)} Sell Signal(s) ───")
@@ -303,8 +388,8 @@ if not sell_signals:
 else:
     for s in sell_signals:
         ticker = s["ticker"]
-        if ticker in took_profit:
-            print(f"\n  — {ticker} already sold via take profit — skipping")
+        if ticker in exited:
+            print(f"\n  — {ticker} already exited via take profit/stop loss — skipping")
             continue
         print(f"\n  Processing SELL for {ticker}...")
         try:
@@ -313,7 +398,7 @@ else:
         except:
             print(f"  — No position in {ticker}, nothing to sell")
 
-if sell_signals or took_profit:
+if sell_signals or exited:
     print("\n  Waiting 10 seconds for sell orders to settle...")
     time.sleep(10)
 
@@ -322,11 +407,12 @@ buy_signals_sorted = sorted(buy_signals, key=lambda x: x["confidence"], reverse=
 
 print(f"\n── Pass 2: Executing {len(buy_signals_sorted)} Buy Signal(s) — Ranked by Confidence ───")
 if not buy_signals_sorted:
-    print("  No buy signals above 60% confidence today")
+    print("  No qualifying buy signals today")
 else:
     print("\n  Buy signal rankings:")
     for i, b in enumerate(buy_signals_sorted, 1):
-        print(f"  #{i} {b['ticker']:<6} Confidence: {b['confidence']:.1%} | Price: ${b['price']:.2f}")
+        vol_tag = " ⚡" if b["volatility"] >= HIGH_VOL_THRESHOLD else ""
+        print(f"  #{i} {b['ticker']:<6} Confidence: {b['confidence']:.1%}{vol_tag} | Price: ${b['price']:.2f}")
 
     print("\n  Executing buys...")
     for b in buy_signals_sorted:
@@ -338,7 +424,7 @@ else:
             print(f"  — Skipped: {remaining}")
             break
         print(f"\n  Processing BUY for {b['ticker']}...")
-        execute_buy(b["ticker"], b["confidence"], b["price"], portfolio_value)
+        execute_buy(b["ticker"], b["confidence"], b["price"], portfolio_value, b["volatility"])
 
 print_portfolio()
 print("\nDone. Run this script daily to execute your strategy.")
