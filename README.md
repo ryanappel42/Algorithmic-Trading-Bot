@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated July 21, 2026 11:26 AM EST
+## Live Performance — Auto-updated July 22, 2026 11:23 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $107,350.10 |
-| Total P&L | $+7,350.10 (+7.35%) |
+| Portfolio Value | $106,705.89 |
+| Total P&L | $+6,705.89 (+6.71%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $65,972.71 |
+| Cash Available | $59,988.81 |
 | Open Positions | 6 |
 | Total Trades Executed | 50 |
 
@@ -39,12 +39,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 4 | $911.20 | $-5.91 |
-| COST | 25 | $23,273.38 | $-63.10 |
-| MA | 3 | $1,625.28 | $+102.85 |
-| META | 17 | $11,007.16 | $-119.64 |
-| MSFT | 2 | $796.87 | $+12.21 |
-| ORCL | 30 | $3,763.50 | $+39.61 |
+| ADBE | 4 | $889.32 | $-27.79 |
+| COST | 28 | $25,803.96 | $-318.86 |
+| MA | 3 | $1,606.53 | $+84.10 |
+| META | 19 | $11,945.20 | $-459.59 |
+| MSFT | 2 | $779.56 | $-5.10 |
+| ORCL | 45 | $5,692.50 | $+49.06 |
 
 
 ---
