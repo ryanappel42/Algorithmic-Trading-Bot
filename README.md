@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated July 29, 2026 11:34 AM EST
+## Live Performance — Auto-updated July 30, 2026 11:43 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $106,614.00 |
-| Total P&L | $+6,614.00 (+6.61%) |
+| Portfolio Value | $107,679.19 |
+| Total P&L | $+7,679.19 (+7.68%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $81,526.58 |
-| Open Positions | 5 |
+| Cash Available | $81,215.00 |
+| Open Positions | 4 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,11 +39,10 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AMZN | 9 | $2,054.57 | $-22.92 |
-| COST | 6 | $5,842.56 | $+20.40 |
-| META | 3 | $1,773.47 | $-41.38 |
-| MSFT | 7 | $2,760.31 | $+6.40 |
-| ORCL | 108 | $12,656.52 | $-531.00 |
+| AMZN | 13 | $3,089.71 | $+82.41 |
+| COST | 9 | $8,604.00 | $-92.04 |
+| ORCL | 108 | $13,558.32 | $+370.80 |
+| QCOM | 8 | $1,212.16 | $+6.57 |
 
 
 ---
