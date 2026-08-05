@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated August 04, 2026 12:02 PM EST
+## Live Performance — Auto-updated August 05, 2026 11:50 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,183.18 |
-| Total P&L | $+9,183.18 (+9.18%) |
+| Portfolio Value | $108,821.67 |
+| Total P&L | $+8,821.67 (+8.82%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $79,995.80 |
-| Open Positions | 4 |
+| Cash Available | $73,596.64 |
+| Open Positions | 5 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,10 +39,11 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 5 | $1,269.20 | $+14.17 |
-| COST | 18 | $17,002.80 | $-185.46 |
-| META | 7 | $4,086.60 | $+92.05 |
-| QCOM | 42 | $6,828.78 | $+488.56 |
+| ADBE | 10 | $2,558.80 | $+5.43 |
+| BAC | 17 | $1,074.23 | $+1.54 |
+| COST | 21 | $19,705.56 | $-316.50 |
+| META | 9 | $5,256.31 | $+67.45 |
+| QCOM | 42 | $6,630.12 | $+289.90 |
 
 
 ---
