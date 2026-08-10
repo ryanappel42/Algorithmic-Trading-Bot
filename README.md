@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated August 07, 2026 10:40 AM EST
+## Live Performance — Auto-updated August 10, 2026 10:44 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,623.00 |
-| Total P&L | $+9,623.00 (+9.62%) |
+| Portfolio Value | $109,763.49 |
+| Total P&L | $+9,763.49 (+9.76%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $72,721.49 |
-| Open Positions | 5 |
+| Cash Available | $65,795.45 |
+| Open Positions | 6 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,11 +39,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 15 | $4,049.40 | $+232.41 |
-| BAC | 34 | $2,139.79 | $-16.65 |
-| COST | 24 | $22,739.16 | $-171.19 |
-| META | 12 | $7,156.32 | $+198.56 |
-| UNH | 2 | $816.84 | $-6.82 |
+| ADBE | 15 | $4,045.80 | $+228.81 |
+| BAC | 34 | $2,168.52 | $+12.08 |
+| COST | 29 | $27,411.73 | $-223.27 |
+| META | 14 | $8,500.52 | $+349.12 |
+| MSFT | 2 | $1,021.76 | $+14.20 |
+| UNH | 2 | $819.71 | $-3.95 |
 
 
 ---
