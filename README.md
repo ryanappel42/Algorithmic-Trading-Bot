@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated August 17, 2026 10:11 AM EST
+## Live Performance — Auto-updated August 18, 2026 10:17 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,590.18 |
-| Total P&L | $+9,590.18 (+9.59%) |
+| Portfolio Value | $108,828.74 |
+| Total P&L | $+8,828.74 (+8.83%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $76,221.50 |
+| Cash Available | $72,801.43 |
 | Open Positions | 7 |
 | Total Trades Executed | 50 |
 
@@ -39,13 +39,13 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 20 | $5,125.70 | $+5.21 |
-| AMD | 4 | $2,049.84 | $+102.58 |
-| BAC | 118 | $7,683.57 | $+118.37 |
-| META | 22 | $12,760.00 | $-131.06 |
-| MSFT | 8 | $3,878.35 | $-101.53 |
-| NFLX | 14 | $1,076.74 | $-15.00 |
-| UNH | 2 | $794.18 | $-29.48 |
+| ADBE | 25 | $6,631.00 | $+213.01 |
+| AMD | 4 | $1,918.78 | $-28.48 |
+| BAC | 151 | $9,690.42 | $+2.66 |
+| META | 22 | $12,044.56 | $-846.50 |
+| MSFT | 8 | $3,852.20 | $-127.68 |
+| NFLX | 14 | $1,095.64 | $+3.90 |
+| UNH | 2 | $795.44 | $-28.22 |
 
 
 ---
