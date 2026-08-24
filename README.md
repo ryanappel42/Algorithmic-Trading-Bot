@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated August 21, 2026 10:19 AM EST
+## Live Performance — Auto-updated August 24, 2026 10:26 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $108,547.45 |
-| Total P&L | $+8,547.45 (+8.55%) |
+| Portfolio Value | $108,832.66 |
+| Total P&L | $+8,832.66 (+8.83%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $53,812.03 |
-| Open Positions | 10 |
+| Cash Available | $56,680.18 |
+| Open Positions | 9 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,16 +39,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 29 | $7,951.36 | $+444.62 |
-| AMD | 8 | $3,708.96 | $-132.62 |
-| BAC | 287 | $17,887.28 | $-379.34 |
-| COST | 3 | $2,839.56 | $+23.37 |
-| CRM | 6 | $1,248.18 | $+17.66 |
-| META | 6 | $3,302.01 | $+26.18 |
-| MSFT | 14 | $6,780.76 | $-86.30 |
-| NFLX | 53 | $4,217.74 | $+25.76 |
-| PYPL | 34 | $2,118.37 | $+21.08 |
-| UNH | 12 | $4,681.20 | $-27.11 |
+| ADBE | 29 | $8,022.85 | $+516.10 |
+| AMD | 8 | $3,639.28 | $-202.30 |
+| BAC | 287 | $17,996.33 | $-270.29 |
+| CRM | 6 | $1,269.36 | $+38.84 |
+| META | 6 | $3,310.50 | $+34.67 |
+| MSFT | 14 | $6,794.20 | $-72.86 |
+| NFLX | 53 | $4,257.50 | $+65.52 |
+| PYPL | 34 | $2,109.02 | $+11.73 |
+| UNH | 12 | $4,753.44 | $+45.13 |
 
 
 ---
