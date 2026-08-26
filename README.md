@@ -23,12 +23,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated August 25, 2026 10:28 AM EST
+## Live Performance — Auto-updated August 26, 2026 10:27 AM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $108,820.28 |
-| Total P&L | $+8,820.28 (+8.82%) |
+| Portfolio Value | $109,102.51 |
+| Total P&L | $+9,102.51 (+9.10%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
 | Cash Available | $56,680.10 |
 | Open Positions | 9 |
@@ -39,15 +39,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 29 | $7,865.23 | $+358.49 |
-| AMD | 8 | $3,791.40 | $-50.18 |
-| BAC | 287 | $17,845.66 | $-420.96 |
-| CRM | 6 | $1,244.04 | $+13.52 |
-| META | 6 | $3,375.66 | $+99.83 |
-| MSFT | 14 | $6,821.36 | $-45.70 |
-| NFLX | 53 | $4,324.80 | $+132.82 |
-| PYPL | 34 | $2,104.60 | $+7.31 |
-| UNH | 12 | $4,767.42 | $+59.11 |
+| ADBE | 29 | $7,864.94 | $+358.20 |
+| AMD | 8 | $3,861.20 | $+19.62 |
+| BAC | 287 | $17,841.38 | $-425.24 |
+| CRM | 6 | $1,221.42 | $-9.10 |
+| META | 6 | $3,435.12 | $+159.29 |
+| MSFT | 14 | $6,904.38 | $+37.32 |
+| NFLX | 53 | $4,349.18 | $+157.20 |
+| PYPL | 34 | $2,097.80 | $+0.51 |
+| UNH | 12 | $4,846.98 | $+138.67 |
 
 
 ---
