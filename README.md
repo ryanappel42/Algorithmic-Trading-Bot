@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated August 28, 2026 07:13 PM EST
+## Live Performance — Auto-updated August 31, 2026 03:42 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,664.08 |
-| Total P&L | $+9,664.08 (+9.66%) |
+| Portfolio Value | $109,493.36 |
+| Total P&L | $+9,493.36 (+9.49%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $78,771.86 |
-| Open Positions | 7 |
+| Cash Available | $67,342.70 |
+| Open Positions | 9 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,13 +39,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AAPL | 3 | $960.00 | $+6.32 |
-| AMD | 8 | $3,729.60 | $-111.98 |
-| COST | 3 | $2,838.00 | $+16.05 |
-| META | 11 | $6,357.78 | $+187.95 |
-| MSFT | 14 | $7,174.44 | $+307.38 |
-| NFLX | 53 | $4,329.00 | $+137.02 |
-| UNH | 14 | $5,503.40 | $+8.49 |
+| AAPL | 6 | $1,898.22 | $-7.81 |
+| AMD | 10 | $4,693.05 | $-85.85 |
+| BAC | 52 | $3,225.04 | $-10.89 |
+| COST | 6 | $5,662.50 | $-4.35 |
+| MA | 1 | $589.39 | $-2.42 |
+| META | 16 | $9,168.96 | $+132.85 |
+| MSFT | 14 | $7,134.54 | $+267.48 |
+| NFLX | 53 | $4,314.20 | $+122.22 |
+| UNH | 14 | $5,464.76 | $-30.15 |
 
 
 ---
