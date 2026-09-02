@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated September 01, 2026 01:27 PM EST
+## Live Performance — Auto-updated September 02, 2026 01:24 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,564.06 |
-| Total P&L | $+9,564.06 (+9.56%) |
+| Portfolio Value | $109,801.27 |
+| Total P&L | $+9,801.27 (+9.80%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $51,050.10 |
+| Cash Available | $51,050.09 |
 | Open Positions | 10 |
 | Total Trades Executed | 50 |
 
@@ -39,16 +39,16 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AAPL | 12 | $3,897.48 | $+99.40 |
-| AMD | 10 | $4,561.85 | $-217.05 |
-| BAC | 104 | $6,432.40 | $-25.52 |
-| COST | 11 | $10,400.61 | $-13.74 |
-| JPM | 3 | $1,065.70 | $-0.38 |
-| MA | 4 | $2,340.20 | $-23.81 |
-| META | 21 | $12,192.60 | $+356.29 |
-| MSFT | 14 | $7,012.32 | $+145.26 |
-| NFLX | 53 | $4,287.44 | $+95.46 |
-| UNH | 16 | $6,323.36 | $+35.88 |
+| AAPL | 12 | $3,907.92 | $+109.84 |
+| AMD | 10 | $4,567.80 | $-211.10 |
+| BAC | 104 | $6,481.28 | $+23.36 |
+| COST | 11 | $10,233.41 | $-180.94 |
+| JPM | 3 | $1,063.14 | $-2.94 |
+| MA | 4 | $2,352.62 | $-11.39 |
+| META | 21 | $12,462.14 | $+625.82 |
+| MSFT | 14 | $6,948.57 | $+81.51 |
+| NFLX | 53 | $4,357.66 | $+165.68 |
+| UNH | 16 | $6,376.64 | $+89.16 |
 
 
 ---
