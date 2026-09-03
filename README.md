@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated July 16, 2026 11:21 AM EST
+## Live Performance — Auto-updated September 03, 2026 01:17 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $108,393.17 |
-| Total P&L | $+8,393.17 (+8.39%) |
+| Portfolio Value | $110,604.70 |
+| Total P&L | $+10,604.70 (+10.60%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $64,625.54 |
-| Open Positions | 6 |
+| Cash Available | $51,050.09 |
+| Open Positions | 10 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,12 +39,16 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| COST | 16 | $14,948.24 | $+62.38 |
-| MA | 3 | $1,644.12 | $+121.69 |
-| META | 9 | $6,084.05 | $+76.20 |
-| NFLX | 70 | $5,159.35 | $-720.34 |
-| ORCL | 119 | $15,071.94 | $-1399.62 |
-| QCOM | 5 | $859.92 | $-58.55 |
+| AAPL | 12 | $3,937.44 | $+139.36 |
+| AMD | 10 | $4,577.80 | $-201.10 |
+| BAC | 104 | $6,553.56 | $+95.64 |
+| COST | 11 | $10,205.25 | $-209.10 |
+| JPM | 3 | $1,082.76 | $+16.68 |
+| MA | 4 | $2,338.08 | $-25.93 |
+| META | 21 | $12,874.05 | $+1037.74 |
+| MSFT | 14 | $7,149.52 | $+282.46 |
+| NFLX | 53 | $4,368.79 | $+176.81 |
+| UNH | 16 | $6,467.36 | $+179.88 |
 
 
 ---
