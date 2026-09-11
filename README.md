@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated September 10, 2026 01:15 PM EST
+## Live Performance — Auto-updated September 11, 2026 01:17 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,940.67 |
-| Total P&L | $+9,940.67 (+9.94%) |
+| Portfolio Value | $110,033.35 |
+| Total P&L | $+10,033.35 (+10.03%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $68,658.50 |
-| Open Positions | 7 |
+| Cash Available | $66,230.35 |
+| Open Positions | 6 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,13 +39,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AAPL | 12 | $3,882.60 | $+84.52 |
-| AMZN | 4 | $1,010.93 | $+3.99 |
-| BAC | 156 | $9,707.88 | $-10.44 |
-| COST | 17 | $15,346.50 | $-503.92 |
-| CRM | 5 | $1,222.65 | $+4.94 |
-| HD | 10 | $3,061.10 | $-11.47 |
-| UNH | 18 | $7,050.51 | $-29.86 |
+| AAPL | 12 | $4,011.42 | $+213.34 |
+| AMZN | 4 | $1,025.60 | $+18.66 |
+| BAC | 156 | $9,808.59 | $+90.27 |
+| COST | 20 | $18,095.30 | $-473.99 |
+| HD | 13 | $4,026.23 | $+21.85 |
+| UNH | 18 | $6,835.86 | $-244.51 |
 
 
 ---
