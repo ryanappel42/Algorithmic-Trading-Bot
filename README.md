@@ -23,12 +23,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated September 14, 2026 02:53 PM EST
+## Live Performance — Auto-updated September 15, 2026 01:46 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,847.27 |
-| Total P&L | $+9,847.27 (+9.85%) |
+| Portfolio Value | $109,404.33 |
+| Total P&L | $+9,404.33 (+9.40%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
 | Cash Available | $64,392.30 |
 | Open Positions | 6 |
@@ -39,12 +39,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AAPL | 12 | $4,012.32 | $+214.24 |
-| AMZN | 4 | $1,018.58 | $+11.64 |
-| BAC | 156 | $9,203.80 | $-514.52 |
-| COST | 22 | $20,225.70 | $-181.59 |
-| HD | 13 | $4,060.61 | $+56.23 |
-| UNH | 18 | $6,933.96 | $-146.41 |
+| AAPL | 12 | $3,968.40 | $+170.32 |
+| AMZN | 4 | $993.52 | $-13.42 |
+| BAC | 156 | $9,295.26 | $-423.06 |
+| COST | 22 | $19,982.60 | $-424.69 |
+| HD | 13 | $3,995.16 | $-9.22 |
+| UNH | 18 | $6,777.09 | $-303.28 |
 
 
 ---
