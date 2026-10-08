@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated October 07, 2026 03:33 PM EST
+## Live Performance — Auto-updated October 08, 2026 03:29 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,163.60 |
-| Total P&L | $+9,163.60 (+9.16%) |
+| Portfolio Value | $109,420.33 |
+| Total P&L | $+9,420.33 (+9.42%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $96,131.02 |
-| Open Positions | 6 |
+| Cash Available | $93,987.13 |
+| Open Positions | 5 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,12 +39,11 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 13 | $3,037.39 | $-38.66 |
-| AMZN | 4 | $1,038.80 | $+31.86 |
-| BAC | 38 | $2,030.53 | $-114.79 |
-| HD | 13 | $3,709.88 | $+6.17 |
-| JPM | 3 | $988.95 | $-4.73 |
-| NFLX | 32 | $2,227.17 | $+69.90 |
+| ADBE | 22 | $5,256.46 | $+47.69 |
+| AMZN | 4 | $1,018.80 | $+11.86 |
+| HD | 20 | $5,881.90 | $+181.17 |
+| JPM | 3 | $995.88 | $+2.20 |
+| NFLX | 32 | $2,280.16 | $+122.89 |
 
 
 ---
