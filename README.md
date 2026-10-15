@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated October 14, 2026 02:11 PM EST
+## Live Performance — Auto-updated October 15, 2026 01:53 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,393.08 |
-| Total P&L | $+9,393.08 (+9.39%) |
+| Portfolio Value | $109,934.15 |
+| Total P&L | $+9,934.15 (+9.93%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $94,408.40 |
-| Open Positions | 4 |
+| Cash Available | $107,779.60 |
+| Open Positions | 2 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,10 +39,8 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 22 | $5,253.82 | $+45.05 |
-| AMZN | 4 | $1,013.76 | $+6.82 |
-| BAC | 22 | $1,116.39 | $+12.43 |
-| HD | 26 | $7,600.71 | $+146.57 |
+| AMZN | 4 | $1,014.40 | $+7.46 |
+| BAC | 22 | $1,140.15 | $+36.19 |
 
 
 ---
