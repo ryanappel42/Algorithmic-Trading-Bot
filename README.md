@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated October 15, 2026 01:53 PM EST
+## Live Performance — Auto-updated October 16, 2026 01:42 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,934.15 |
-| Total P&L | $+9,934.15 (+9.93%) |
+| Portfolio Value | $109,913.38 |
+| Total P&L | $+9,913.38 (+9.91%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $107,779.60 |
+| Cash Available | $106,691.51 |
 | Open Positions | 2 |
 | Total Trades Executed | 50 |
 
@@ -39,8 +39,8 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AMZN | 4 | $1,014.40 | $+7.46 |
-| BAC | 22 | $1,140.15 | $+36.19 |
+| AMZN | 4 | $1,001.56 | $-5.38 |
+| BAC | 43 | $2,220.30 | $+28.54 |
 
 
 ---
