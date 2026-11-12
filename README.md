@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated November 10, 2026 03:37 PM EST
+## Live Performance — Auto-updated November 12, 2026 04:07 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $109,485.91 |
-| Total P&L | $+9,485.91 (+9.49%) |
+| Portfolio Value | $109,261.36 |
+| Total P&L | $+9,261.36 (+9.26%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $95,971.01 |
+| Cash Available | $91,798.04 |
 | Open Positions | 5 |
 | Total Trades Executed | 50 |
 
@@ -39,11 +39,11 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| BAC | 64 | $3,243.52 | $-22.29 |
-| CRM | 4 | $850.64 | $-25.32 |
-| GOOGL | 12 | $3,452.52 | $+53.59 |
-| NFLX | 68 | $4,285.02 | $+49.52 |
-| NVDA | 10 | $1,683.25 | $-59.48 |
+| AMD | 2 | $1,171.54 | $+44.58 |
+| BAC | 64 | $3,236.48 | $-29.33 |
+| CRM | 24 | $5,201.28 | $+14.19 |
+| GOOGL | 12 | $3,586.97 | $+188.04 |
+| NFLX | 68 | $4,267.05 | $+31.55 |
 
 
 ---
