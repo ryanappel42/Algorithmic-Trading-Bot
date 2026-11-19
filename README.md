@@ -23,15 +23,15 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated November 18, 2026 04:37 PM EST
+## Live Performance — Auto-updated November 19, 2026 04:50 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $107,618.79 |
-| Total P&L | $+7,618.79 (+7.62%) |
+| Portfolio Value | $106,759.04 |
+| Total P&L | $+6,759.04 (+6.76%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $88,523.21 |
-| Open Positions | 6 |
+| Cash Available | $91,050.63 |
+| Open Positions | 5 |
 | Total Trades Executed | 50 |
 
 📈 Bot has been live since March 27, 2026
@@ -39,12 +39,11 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| AMD | 4 | $2,113.00 | $+62.31 |
-| BAC | 64 | $3,130.24 | $-135.57 |
-| CRM | 9 | $1,713.06 | $-4.63 |
-| GOOGL | 12 | $3,396.00 | $-2.93 |
-| NFLX | 68 | $4,075.92 | $-159.58 |
-| NVDA | 31 | $4,667.36 | $-293.47 |
+| AMD | 4 | $1,911.52 | $-139.17 |
+| BAC | 64 | $3,093.39 | $-172.42 |
+| CRM | 19 | $3,452.30 | $-208.69 |
+| GOOGL | 12 | $3,280.68 | $-118.25 |
+| NFLX | 68 | $3,970.52 | $-264.98 |
 
 
 ---
