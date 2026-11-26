@@ -23,14 +23,14 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 
 ---
 
-## Live Performance — Auto-updated November 25, 2026 05:48 PM EST
+## Live Performance — Auto-updated November 26, 2026 05:37 PM EST
 
 | Metric | Value |
 |--------|-------|
-| Portfolio Value | $107,156.76 |
-| Total P&L | $+7,156.76 (+7.16%) |
+| Portfolio Value | $107,169.44 |
+| Total P&L | $+7,169.44 (+7.17%) |
 | Daily P&L | 📈 $+0.00 (+0.00%) |
-| Cash Available | $79,108.65 |
+| Cash Available | $79,108.59 |
 | Open Positions | 6 |
 | Total Trades Executed | 50 |
 
@@ -39,12 +39,12 @@ No human involvement required. It runs, trades, and reports entirely on its own.
 ### Current Open Positions
 | Ticker | Shares | Value | Unrealized P&L |
 |--------|--------|-------|----------------|
-| ADBE | 36 | $8,366.40 | $+313.59 |
-| BAC | 22 | $1,068.98 | $+6.38 |
-| CRM | 46 | $9,085.00 | $+450.81 |
-| GOOGL | 12 | $3,280.56 | $-118.37 |
-| NFLX | 18 | $1,065.42 | $+17.93 |
-| UNH | 15 | $5,181.75 | $+173.32 |
+| ADBE | 36 | $8,381.88 | $+329.07 |
+| BAC | 22 | $1,067.88 | $+5.28 |
+| CRM | 46 | $9,071.66 | $+437.47 |
+| GOOGL | 12 | $3,277.20 | $-121.73 |
+| NFLX | 18 | $1,069.38 | $+21.89 |
+| UNH | 15 | $5,192.85 | $+184.42 |
 
 
 ---
